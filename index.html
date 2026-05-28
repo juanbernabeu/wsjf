@@ -53,56 +53,71 @@ body {
 /* ── HEADER ── */
 .header {
   background: var(--purple);
-  padding: 0 32px;
+  padding: 0 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 56px;
+  height: 52px;
   position: sticky;
   top: 0;
   z-index: 100;
   border-bottom: 3px solid var(--orange);
+  gap: 12px;
 }
 .header-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  min-width: 0;
+  flex-shrink: 1;
 }
 .header-logo {
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--white);
-  letter-spacing: -.3px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--orange);
+  flex-shrink: 0;
+  background: #1E0840;
+  padding: 3px 10px;
+  border-radius: 6px;
 }
-.header-logo span { color: var(--orange); }
 .header-sep {
   width: 1px;
   height: 20px;
   background: #3A1070;
+  flex-shrink: 0;
 }
 .header-title {
   font-size: 12px;
   font-weight: 600;
   color: #C8A8F8;
-  letter-spacing: .3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .header-formula {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
   color: var(--orange);
   background: #1E0840;
-  padding: 5px 14px;
+  padding: 3px 10px;
   border-radius: 20px;
-  letter-spacing: .5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.header-tabs {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 /* ── LAYOUT ── */
 .app {
   display: grid;
-  grid-template-columns: 480px 1fr;
+  grid-template-columns: 460px 1fr;
   gap: 0;
-  min-height: calc(100vh - 56px);
+  min-height: calc(100vh - 55px);
 }
 
 /* ── LEFT PANEL — INPUT ── */
@@ -111,9 +126,9 @@ body {
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 56px);
+  height: calc(100vh - 55px);
   position: sticky;
-  top: 56px;
+  top: 55px;
   overflow-y: auto;
 }
 .panel-left::-webkit-scrollbar { width: 4px; }
@@ -381,12 +396,22 @@ body {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 20px;
+  gap: 12px;
+}
+.stack-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
 }
 .stack-title {
   font-size: 18px;
   font-weight: 800;
   color: var(--purple);
   letter-spacing: -.4px;
+  word-break: break-word;
+  white-space: normal;
+  line-height: 1.2;
 }
 .stack-count {
   font-size: 11px;
@@ -422,6 +447,21 @@ body {
 }
 .btn-export:hover { background: var(--purple-m); }
 .btn-export:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+
+.btn-import {
+  padding: 7px 16px;
+  background: none;
+  border: 1.5px solid var(--purple);
+  border-radius: 7px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--purple);
+  cursor: pointer;
+  transition: all .15s;
+  letter-spacing: .3px;
+}
+.btn-import:hover { background: var(--lavender); border-color: var(--purple-m); }
 
 /* Capacity bar */
 .cap-bar-wrap {
@@ -848,11 +888,331 @@ body {
   margin: 10px 0 4px;
 }
 
-/* Mobile */
-@media(max-width:900px) {
-  .app { grid-template-columns: 1fr; }
-  .panel-left { position: static; height: auto; }
+/* ── EDIT MODAL ── */
+.edit-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(10,4,26,.6);
+  backdrop-filter: blur(3px);
+  z-index: 300;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.edit-overlay.open { display: flex; }
+.edit-modal {
+  background: var(--white);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(74,0,153,.25);
+}
+.edit-modal-header {
+  background: var(--purple);
+  padding: 16px 20px;
+  border-radius: 16px 16px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.edit-modal-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--white);
+}
+.edit-modal-close {
+  background: none;
+  border: none;
+  color: #9A7ACC;
+  cursor: pointer;
+  padding: 2px;
+  line-height: 1;
+}
+.edit-modal-close:hover { color: var(--white); }
+.edit-modal-body { padding: 20px; }
+.edit-field { margin-bottom: 14px; }
+.edit-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+  display: block;
+}
+.edit-input {
+  width: 100%;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--lavender);
+  outline: none;
+  transition: border-color .2s;
+}
+.edit-input:focus { border-color: var(--purple); background: var(--white); }
+.edit-dims {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.edit-dim-wrap { text-align: center; }
+.edit-dim-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+  display: block;
+}
+.edit-dim-label.I { color: var(--orange); }
+.edit-dim-label.U { color: var(--info); }
+.edit-dim-label.R { color: var(--success); }
+.edit-dim-label.E { color: var(--danger); }
+.edit-dim-input {
+  width: 100%;
+  border: 1.5px solid var(--border);
+  border-radius: 7px;
+  padding: 8px 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  background: var(--lavender);
+  transition: border-color .2s;
+}
+.edit-dim-input.I:focus { border-color: var(--orange); }
+.edit-dim-input.U:focus { border-color: var(--info); }
+.edit-dim-input.R:focus { border-color: var(--success); }
+.edit-dim-input.E:focus { border-color: var(--danger); }
+.edit-score-preview {
+  background: var(--purple);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.edit-score-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--orange);
+  line-height: 1;
+}
+.edit-score-detail { font-size: 11px; color: #9A7ACC; }
+.edit-modal-footer {
+  display: flex;
+  gap: 8px;
+  padding: 0 20px 20px;
+}
+.btn-save {
+  flex: 1;
+  padding: 12px;
+  background: var(--purple);
+  border: none;
+  border-radius: 9px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--white);
+  cursor: pointer;
+  transition: background .15s;
+}
+.btn-save:hover { background: var(--purple-m); }
+.btn-save-cancel {
+  padding: 12px 18px;
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .15s;
+}
+.btn-save-cancel:hover { border-color: var(--purple); color: var(--purple); }
+
+/* localStorage badge */
+.save-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--success);
+  background: var(--success-bg);
+  border: 1px solid var(--success-b);
+  border-radius: 20px;
+  padding: 3px 10px;
+  opacity: 0;
+  transition: opacity .3s;
+}
+.save-badge.show { opacity: 1; }
+
+/* Edit pencil button on card */
+.btn-edit {
+  background: none;
+  border: none;
+  color: var(--border);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px;
+  transition: color .15s;
+  line-height: 1;
+}
+.btn-edit:hover { color: var(--purple); }
+
+/* ── MOBILE FIRST ── */
+@media(max-width:768px) {
+
+  /* Header: logo + tabs apilados */
+  .header {
+    height: auto;
+    padding: 10px 16px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .header-brand {
+    justify-content: space-between;
+  }
+  .header-title {
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+  }
   .header-formula { display: none; }
+
+  /* Tabs: fila completa bajo el logo */
+  .header-tabs {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+  }
+  .nav-tab {
+    flex: 1;
+    padding: 8px 4px;
+    font-size: 12px;
+    text-align: center;
+    border-radius: 8px;
+  }
+
+  /* App: columna única, sin sticky */
+  .app {
+    grid-template-columns: 1fr;
+  }
+  .panel-left {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .panel-section {
+    padding: 16px 16px;
+  }
+  .panel-right {
+    padding: 16px 16px 48px;
+  }
+
+  /* Score live: más compacto */
+  .score-live {
+    padding: 14px 16px;
+    gap: 12px;
+  }
+  .score-live-num { font-size: 40px; }
+
+  /* Sliders y rubrics */
+  .rubric-row { gap: 3px; }
+  .rub-opt { padding: 3px 2px; font-size: 9px; }
+
+  /* Stack header en mobile: solo el título */
+  .stack-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  /* Botones fijos al fondo en mobile */
+  .stack-actions {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    background: var(--white);
+    border-top: 2px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    gap: 10px;
+  }
+  .stack-actions .btn-export,
+  .stack-actions .btn-clear {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+    padding: 12px 8px;
+    font-size: 13px;
+  }
+
+  /* Espacio para no tapar las cards con la barra fija */
+  .panel-right {
+    padding-bottom: 80px;
+  }
+
+  /* Stats row: 2 cols */
+  .stats-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Capacity grid: columna */
+  .cap-bar-wrap {
+    padding: 12px 14px;
+  }
+
+  /* Dim grid: columna */
+  .dim-grid { grid-template-columns: 1fr 1fr; }
+
+  /* Tshirt row */
+  .tshirt { font-size: 12px; padding: 6px 0; }
+
+  /* Cards */
+  .card-name { font-size: 12px; }
+  .card-dims { flex-wrap: wrap; gap: 4px; }
+
+  /* Confirm modal: columna */
+  #confirm-modal {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+  #confirm-modal > div:last-child {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+  #confirm-modal button { flex: 1; }
+
+  /* FAQ */
+  #view-faq {
+    padding: 24px 16px 56px;
+  }
+  .faq-section-title { font-size: 15px; }
+  .faq-q { font-size: 12.5px; }
+  .faq-a { font-size: 12px; }
 }
 </style>
 </head>
@@ -863,13 +1223,12 @@ body {
   <div class="header-brand">
     <div class="header-logo">WSJF</div>
     <div class="header-sep"></div>
-    <div class="header-title">WSJF Calculator — Priorizá iniciativas con criterio</div>
+    <div class="header-title">Calculadora de priorización</div>
+    <div class="header-formula">( I + U + R ) ÷ E</div>
   </div>
-  <div style="display:flex;align-items:center;gap:12px">
-    <div class="header-formula">WSJF = ( I + U + R ) ÷ E</div>
-    <div style="width:1px;height:20px;background:#3A1070"></div>
-    <button class="nav-tab" id="tab-calc" onclick="switchTab('calc')">🧮 Calculadora</button>
-    <button class="nav-tab active" id="tab-faq" onclick="switchTab('faq')">❓ Guía y FAQ</button>
+  <div class="header-tabs">
+    <button class="nav-tab" id="tab-calc" onclick="switchTab('calc')"><i data-lucide="calculator" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;stroke-width:2"></i>Calculadora</button>
+    <button class="nav-tab active" id="tab-faq" onclick="switchTab('faq')"><i data-lucide="book-open" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;stroke-width:2"></i>Guía y FAQ</button>
   </div>
 </header>
 
@@ -911,7 +1270,7 @@ body {
       </div>
       <div id="name-error" style="display:none;background:#FEF2F2;border:1.5px solid #FCA5A5;border-radius:8px;padding:10px 14px;margin-top:8px;animation:slideIn .15s ease">
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:18px;line-height:1">⚠️</span>
+          <i data-lucide="alert-circle" style="width:18px;height:18px;flex-shrink:0;stroke:var(--danger);stroke-width:2"></i>
           <div>
             <div style="font-size:12px;font-weight:700;color:#DC2626">El nombre es obligatorio</div>
             <div style="font-size:11px;color:#991B1B;margin-top:2px">Escribí el nombre de la iniciativa antes de agregarla. Una oración clara es suficiente.</div>
@@ -1069,7 +1428,7 @@ body {
       <!-- Mini calculadora eng-months -->
       <details style="margin-top:4px">
         <summary style="font-size:11px;font-weight:700;color:var(--purple);cursor:pointer;user-select:none;padding:7px 10px;background:var(--lavender);border-radius:7px;list-style:none;display:flex;justify-content:space-between;align-items:center">
-          <span>🧮 Calculadora de eng-months</span>
+          <span><i data-lucide="calculator" style="width:13px;height:13px;vertical-align:middle;margin-right:5px;stroke-width:2;stroke:var(--purple)"></i>Calculadora de eng-months</span>
           <span style="font-size:10px;color:var(--muted)">Calculá paso a paso →</span>
         </summary>
         <div style="background:var(--lavender);border-radius:0 0 7px 7px;padding:12px;margin-top:2px;border:1px solid var(--border);border-top:none">
@@ -1107,8 +1466,8 @@ body {
 
     <!-- Actions -->
     <div class="panel-section">
-      <button class="btn-add" id="btn-add" onclick="addInitiative()">+ Agregar al stack rank</button>
-      <button class="btn-reset" onclick="resetForm()">Limpiar formulario</button>
+      <button class="btn-add" id="btn-add" onclick="addInitiative()"><i data-lucide="plus-circle" style="width:15px;height:15px;vertical-align:middle;margin-right:6px;stroke-width:2.5"></i>Agregar al stack rank</button>
+      <button class="btn-reset" onclick="resetForm()"><i data-lucide="rotate-ccw" style="width:12px;height:12px;vertical-align:middle;margin-right:5px;stroke-width:2"></i>Limpiar formulario</button>
     </div>
 
   </aside>
@@ -1117,16 +1476,27 @@ body {
   <main class="panel-right">
 
     <div class="stack-header">
-      <div>
-        <div class="stack-title" id="stack-title">Stack Rank del equipo</div>
-        <div class="stack-count" id="stack-count">0 iniciativas · ordenadas por score WSJF</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div>
+          <div class="stack-title" id="stack-title">Stack Rank del equipo</div>
+          <div class="stack-count" id="stack-count">0 iniciativas · ordenadas por score WSJF</div>
+        </div>
+        <div class="save-badge" id="save-badge">
+          <i data-lucide="check-circle" style="width:11px;height:11px;stroke-width:2.5;stroke:currentColor"></i>
+          Guardado
+        </div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button class="btn-export" onclick="exportCSV()" id="btn-export" title="Exportar a Google Sheets">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:5px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-          Exportar
+      <div class="stack-actions">
+        <input type="file" id="import-csv-input" accept=".csv" style="display:none" onchange="handleImportCSV(event)">
+        <button class="btn-import" onclick="document.getElementById('import-csv-input').click()" title="Importar CSV">
+          <i data-lucide="upload" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;stroke-width:2.5"></i>
+          Importar CSV
         </button>
-        <button class="btn-clear" id="btn-clear-main" onclick="confirmClear()">Limpiar todo</button>
+        <button class="btn-export" onclick="exportCSV()" title="Exportar a Google Sheets">
+          <i data-lucide="download" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;stroke-width:2.5"></i>
+          Exportar CSV
+        </button>
+        <button class="btn-clear" onclick="confirmClear()"><i data-lucide="trash-2" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;stroke-width:2"></i>Limpiar todo</button>
       </div>
     </div>
 
@@ -1139,9 +1509,15 @@ body {
       </div>
     </div>
 
+    <!-- Import toast -->
+    <div id="import-toast" style="display:none;background:#EFF6FF;border:1.5px solid #93C5FD;border-radius:10px;padding:14px 18px;margin-bottom:16px;animation:slideIn .15s ease">
+      <div style="font-size:12.5px;font-weight:700;color:#2563EB;margin-bottom:4px"><i data-lucide="check-circle" style="width:15px;height:15px;vertical-align:middle;margin-right:6px;stroke:#2563EB;stroke-width:2.5"></i><span id="import-toast-msg">Iniciativas importadas correctamente.</span></div>
+      <button onclick="document.getElementById('import-toast').style.display='none'" style="margin-top:8px;background:none;border:1px solid #93C5FD;border-radius:5px;padding:4px 12px;font-size:10px;font-weight:600;color:#2563EB;cursor:pointer">Cerrar</button>
+    </div>
+
     <!-- Export toast -->
     <div id="export-toast" style="display:none;background:#F0FDF4;border:1.5px solid #86EFAC;border-radius:10px;padding:14px 18px;margin-bottom:16px;animation:slideIn .15s ease">
-      <div style="font-size:12.5px;font-weight:700;color:#16A34A;margin-bottom:6px">✅ CSV descargado — para importar a Google Sheets:</div>
+      <div style="font-size:12.5px;font-weight:700;color:#16A34A;margin-bottom:6px"><i data-lucide="check-circle" style="width:15px;height:15px;vertical-align:middle;margin-right:6px;stroke:#16A34A;stroke-width:2.5"></i>CSV descargado — para importar a Google Sheets:</div>
       <div style="font-size:11.5px;color:#166534;line-height:1.7">
         1. Abrí <strong>Google Sheets</strong> → Archivo → Importar<br>
         2. Arrastrá el archivo <strong>wsjf-stack-rank.csv</strong> que se descargó<br>
@@ -1188,7 +1564,7 @@ body {
 
     <!-- Empty state -->
     <div class="empty-state" id="empty-state">
-      <div class="empty-icon">📋</div>
+      <div class="empty-icon"><i data-lucide="clipboard-list" style="width:40px;height:40px;stroke:var(--purple);opacity:.3;stroke-width:1.5"></i></div>
       <div class="empty-title">Todavía no hay iniciativas</div>
       <div class="empty-sub">Completá el formulario de la izquierda<br>y agregá cada iniciativa al stack rank.<br><br>Se ordenan automáticamente de mayor a menor score.</div>
     </div>
@@ -1375,10 +1751,103 @@ body {
 
 </div><!-- /view-faq -->
 
+<!-- ══ EDIT MODAL ══ -->
+<div class="edit-overlay" id="edit-overlay" onclick="closeEditIfOutside(event)">
+  <div class="edit-modal">
+    <div class="edit-modal-header">
+      <div class="edit-modal-title"><i data-lucide="pencil" style="width:14px;height:14px;vertical-align:middle;margin-right:6px;stroke-width:2.5"></i>Editar iniciativa</div>
+      <button class="edit-modal-close" onclick="closeEdit()"><i data-lucide="x" style="width:18px;height:18px;stroke-width:2.5;stroke:currentColor"></i></button>
+    </div>
+    <div class="edit-modal-body">
+      <input type="hidden" id="edit-id">
+
+      <div class="edit-field">
+        <label class="edit-label">Nombre</label>
+        <input type="text" class="edit-input" id="edit-name" maxlength="80" oninput="updateEditPreview()">
+      </div>
+
+      <div class="edit-field">
+        <label class="edit-label">OKR / KR asociado</label>
+        <input type="text" class="edit-input" id="edit-kr" maxlength="100">
+      </div>
+
+      <label class="edit-label">Dimensiones</label>
+      <div class="edit-dims">
+        <div class="edit-dim-wrap">
+          <span class="edit-dim-label I">I — Impacto</span>
+          <input type="number" class="edit-dim-input I" id="edit-I" min="1" max="5" value="3" oninput="clampDim('I');updateEditPreview()">
+        </div>
+        <div class="edit-dim-wrap">
+          <span class="edit-dim-label U">U — Urgencia</span>
+          <input type="number" class="edit-dim-input U" id="edit-U" min="1" max="5" value="3" oninput="clampDim('U');updateEditPreview()">
+        </div>
+        <div class="edit-dim-wrap">
+          <span class="edit-dim-label R">R — Riesgo</span>
+          <input type="number" class="edit-dim-input R" id="edit-R" min="1" max="5" value="3" oninput="clampDim('R');updateEditPreview()">
+        </div>
+        <div class="edit-dim-wrap">
+          <span class="edit-dim-label E">E — Esfuerzo</span>
+          <input type="number" class="edit-dim-input E" id="edit-E" min="1" max="5" value="3" oninput="clampDim('E');updateEditPreview()">
+        </div>
+      </div>
+
+      <div class="edit-field">
+        <label class="edit-label">Eng-months</label>
+        <input type="number" class="edit-input" id="edit-em" min="0" max="50" step="0.5" value="0" style="max-width:100px">
+      </div>
+
+      <div class="edit-score-preview">
+        <div>
+          <div style="font-size:10px;color:#9A7ACC;margin-bottom:2px">WSJF Score</div>
+          <div class="edit-score-num" id="edit-preview-score">3.0</div>
+        </div>
+        <div class="edit-score-detail" id="edit-preview-formula">(3+3+3)÷3</div>
+        <div id="edit-preview-verdict" class="card-verdict" style="font-size:11px"></div>
+      </div>
+    </div>
+    <div class="edit-modal-footer">
+      <button class="btn-save-cancel" onclick="closeEdit()">Cancelar</button>
+      <button class="btn-save" onclick="saveEdit()"><i data-lucide="check" style="width:14px;height:14px;vertical-align:middle;margin-right:5px;stroke-width:2.5"></i>Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── STATE ────────────────────────────────────────────
 const state = { I:3, U:3, R:3, E:3, tshirt:'M' };
 const stack = [];
+
+// ── LOCALSTORAGE ─────────────────────────────────────
+const LS_KEY = 'wsjf_stack_v1';
+const LS_TEAM = 'wsjf_team_v1';
+
+function saveToLS() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(stack));
+    const teamName = document.getElementById('team-name')?.value || '';
+    localStorage.setItem(LS_TEAM, teamName);
+    // Flash badge
+    const badge = document.getElementById('save-badge');
+    if (badge) { badge.classList.add('show'); clearTimeout(badge._t); badge._t = setTimeout(() => badge.classList.remove('show'), 2000); }
+  } catch(e) {}
+}
+
+function loadFromLS() {
+  try {
+    const saved = localStorage.getItem(LS_KEY);
+    if (saved) {
+      const items = JSON.parse(saved);
+      items.forEach(i => stack.push(i));
+    }
+    const team = localStorage.getItem(LS_TEAM);
+    if (team) {
+      const el = document.getElementById('team-name');
+      if (el) { el.value = team; }
+      const title = document.getElementById('stack-title');
+      if (title && team) title.textContent = `Stack Rank — ${team}`;
+    }
+  } catch(e) {}
+}
 
 // ── SCORE LOGIC ─────────────────────────────────────
 function calcWSJF(I, U, R, E) {
@@ -1386,10 +1855,10 @@ function calcWSJF(I, U, R, E) {
 }
 
 function getVerdict(score) {
-  if (score > 4.0)  return { label:'✅ COMMIT',    cls:'v-commit',   short:'COMMIT' };
-  if (score > 2.5)  return { label:'⚡ CONSIDERAR', cls:'v-consider', short:'CONSIDERAR' };
-  if (score > 1.5)  return { label:'⏸ PARKING',    cls:'v-parking',  short:'PARKING' };
-  return              { label:'🛑 STOP',          cls:'v-stop',     short:'STOP' };
+  if (score > 4.0)  return { label:'COMMIT',    cls:'v-commit',   short:'COMMIT' };
+  if (score > 2.5)  return { label:'CONSIDERAR', cls:'v-consider', short:'CONSIDERAR' };
+  if (score > 1.5)  return { label:'PARKING',    cls:'v-parking',  short:'PARKING' };
+  return              { label:'STOP',          cls:'v-stop',     short:'STOP' };
 }
 
 function getScoreColor(score) {
@@ -1571,6 +2040,7 @@ function addInitiative() {
   stack.push({ id: Date.now(), name, kr, I, U, R, E, score, em, tshirt: tshirtLabel(E) });
   stack.sort((a, b) => b.score - a.score);
   renderStack();
+  saveToLS();
   resetForm();
 }
 
@@ -1588,6 +2058,7 @@ function removeItem(id) {
   const idx = stack.findIndex(i => i.id === id);
   if (idx !== -1) stack.splice(idx, 1);
   renderStack();
+  saveToLS();
 }
 
 function confirmClear() {
@@ -1602,46 +2073,157 @@ function doClear() {
   stack.length = 0;
   document.getElementById('confirm-modal').style.display = 'none';
   renderStack();
+  saveToLS();
 }
 
-// ── EXPORT CSV → Google Sheets ───────────────────────
-function exportCSV() {
-  if (stack.length === 0) return;
+// ── IMPORT CSV ───────────────────────────────────────
+function parseCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+      else { inQuotes = !inQuotes; }
+    } else if (ch === ',' && !inQuotes) {
+      result.push(current); current = '';
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current);
+  return result;
+}
 
-  const teamName = document.getElementById('team-name').value.trim() || 'Sin nombre';
-  const teamCap = parseFloat(document.getElementById('team-cap').value) || 20;
-  const headers = ['Equipo','Ranking','Iniciativa','OKR / KR asociado','WSJF Score','I - Impacto OKR','U - Urgencia','R - Riesgo','E - Esfuerzo','Camiseta','Eng-months','Decisión','Fórmula'];
+function handleImportCSV(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    let text = e.target.result;
+    // Quitar BOM si existe
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+
+    const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
+    if (lines.length < 2) {
+      alert('El archivo CSV no contiene datos válidos.');
+      event.target.value = '';
+      return;
+    }
+
+    const dataLines = lines.slice(1); // omitir encabezado
+    const imported = [];
+    let teamFromCSV = '';
+
+    dataLines.forEach((line, idx) => {
+      const cols = parseCSVLine(line);
+      if (cols.length < 11) return;
+
+      const name = cols[2].trim();
+      if (!name) return;
+
+      if (idx === 0 && cols[0]) teamFromCSV = cols[0].trim();
+
+      const I = Math.min(5, Math.max(1, parseInt(cols[5]) || 3));
+      const U = Math.min(5, Math.max(1, parseInt(cols[6]) || 3));
+      const R = Math.min(5, Math.max(1, parseInt(cols[7]) || 3));
+      const E = Math.min(5, Math.max(1, parseInt(cols[8]) || 3));
+      const score = calcWSJF(I, U, R, E);
+
+      imported.push({
+        id: Date.now() + Math.random(),
+        name,
+        kr: cols[3].trim(),
+        I, U, R, E, score,
+        tshirt: cols[9].trim() || tshirtLabel(E),
+        em: parseFloat(cols[10]) || 0
+      });
+    });
+
+    if (imported.length === 0) {
+      alert('No se encontraron iniciativas válidas en el archivo.');
+      event.target.value = '';
+      return;
+    }
+
+    let msg = '';
+    if (stack.length > 0) {
+      const replace = confirm(
+        `Se encontraron ${imported.length} iniciativa(s) en el CSV.\n\n` +
+        `¿Qué querés hacer con el stack actual (${stack.length} iniciativa(s))?\n\n` +
+        `OK → Reemplazar todo\nCancelar → Agregar al stack actual`
+      );
+      if (replace) {
+        stack.length = 0;
+        msg = `${imported.length} iniciativa(s) importada(s) · stack reemplazado.`;
+      } else {
+        msg = `${imported.length} iniciativa(s) agregada(s) al stack existente.`;
+      }
+    } else {
+      msg = `${imported.length} iniciativa(s) importada(s) correctamente.`;
+    }
+
+    imported.forEach(item => stack.push(item));
+    stack.sort((a, b) => b.score - a.score);
+
+    // Setear nombre de equipo desde CSV si el campo está vacío
+    const teamEl = document.getElementById('team-name');
+    if (teamEl && !teamEl.value.trim() && teamFromCSV) {
+      teamEl.value = teamFromCSV;
+      const title = document.getElementById('stack-title');
+      if (title) title.textContent = `Stack Rank — ${teamFromCSV}`;
+    }
+
+    renderStack();
+    saveToLS();
+
+    const toast = document.getElementById('import-toast');
+    const toastMsg = document.getElementById('import-toast-msg');
+    if (toast && toastMsg) {
+      toastMsg.textContent = msg;
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 6000);
+    }
+
+    event.target.value = '';
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+// ── EXPORT CSV ───────────────────────────────────────
+function exportCSV() {
+  if (stack.length === 0) {
+    alert('Agregá al menos una iniciativa antes de exportar.');
+    return;
+  }
+
+  const teamName = document.getElementById('team-name').value.trim() || 'equipo';
+  const teamCap  = parseFloat(document.getElementById('team-cap').value) || 20;
+
+  const headers = [
+    'Equipo','Ranking','Iniciativa','OKR / KR asociado',
+    'WSJF Score','I','U','R','E','Camiseta','Eng-months','Decisión'
+  ];
 
   const rows = stack.map((item, idx) => {
-    const v = getVerdict(item.score);
-    const formula = `(${item.I}+${item.U}+${item.R})/${item.E}`;
+    const v   = getVerdict(item.score);
+    const esc = s => '"' + String(s || '').replace(/"/g, '""') + '"';
     return [
-      `"${teamName}"`,
-      idx + 1,
-      `"${item.name.replace(/"/g, '""')}"`,
-      `"${(item.kr || '').replace(/"/g, '""')}"`,
-      item.score.toFixed(2),
-      item.I, item.U, item.R, item.E,
-      item.tshirt || '',
-      item.em || '',
-      v.short,
-      formula,
+      esc(teamName), idx + 1, esc(item.name), esc(item.kr || ''),
+      item.score.toFixed(2), item.I, item.U, item.R, item.E,
+      item.tshirt || '', item.em || '', v.short,
     ].join(',');
   });
 
-  const meta = [
-    `"Equipo: ${teamName}"`,
-    `"Capacidad total del Q: ${teamCap} eng-months"`,
-    `"Fecha: ${new Date().toLocaleDateString('es-AR')}"`,
-    `"Generado con WSJF Calculator"`,
-  ].join('\n') + '\n\n';
-
-  const csv = meta + [headers.join(','), ...rows].join('\n');
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `wsjf-${teamName.toLowerCase().replace(/\s+/g,'-')}.csv`;
+  const csv      = [headers.join(','), ...rows].join('\n');
+  const filename = 'wsjf-' + teamName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '.csv';
+  const blob     = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url      = URL.createObjectURL(blob);
+  const a        = document.createElement('a');
+  a.href         = url;
+  a.download     = filename;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -1649,8 +2231,11 @@ function exportCSV() {
 
   const toast = document.getElementById('export-toast');
   toast.style.display = 'block';
-  setTimeout(() => toast.style.display = 'none', 12000);
+  setTimeout(() => { toast.style.display = 'none'; }, 8000);
 }
+
+function copyCSV()         {}   // stub — no usado
+function closeExportModal(){}   // stub — no usado
 
 // ── RENDER STACK ─────────────────────────────────────
 function renderStack() {
@@ -1708,7 +2293,7 @@ function renderStack() {
     ].join('');
 
     const emLabel = item.em > 0 ? `<span style="font-size:10px;color:var(--muted);font-weight:500">${item.em} eng-months</span>` : '';
-    const krLabel = item.kr ? `<div style="font-size:10px;color:var(--teal);font-weight:600;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px" title="${item.kr}">📌 ${item.kr}</div>` : '';
+    const krLabel = item.kr ? `<div style="font-size:10px;color:var(--teal);font-weight:600;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px" title="${item.kr}"><i data-lucide="target" style="width:10px;height:10px;vertical-align:middle;margin-right:3px;stroke:var(--teal);stroke-width:2.5"></i>${item.kr}</div>` : '';
 
     html += `
       <div class="initiative-card">
@@ -1725,13 +2310,18 @@ function renderStack() {
           </div>
           <div class="card-right">
             <span class="card-verdict ${v.cls}">${v.short}</span>
-            <button class="btn-del" onclick="removeItem(${item.id})" title="Eliminar">✕</button>
+            <div style="display:flex;gap:4px;margin-top:4px">
+              <button class="btn-edit" onclick="openEdit(${item.id})" title="Editar"><i data-lucide="pencil" style="width:13px;height:13px;stroke-width:2;stroke:currentColor"></i></button>
+              <button class="btn-del" onclick="removeItem(${item.id})" title="Eliminar"><i data-lucide="x" style="width:13px;height:13px;stroke-width:2.5;stroke:currentColor"></i></button>
+            </div>
           </div>
         </div>
       </div>`;
   });
 
   list.innerHTML = html;
+  // Re-render Lucide icons in new cards
+  renderIcons();
 
   // Update cap bar
   const totalEm = stack.reduce((s, i) => s + (i.em || 0), 0);
@@ -1774,7 +2364,7 @@ function updateCapBar(used, total) {
     detail.style.fontWeight = '600';
   } else if (used > total * 0.90) {
     fill.className = 'cap-fill warn';
-    detail.textContent = `⚡ Casi al límite: ${used.toFixed(1)} / ${total} eng-months usados. Sin buffer.`;
+    detail.textContent = `Casi al límite: ${used.toFixed(1)} / ${total} eng-months usados. Sin buffer.`;
     detail.style.color = 'var(--warning)';
     detail.style.fontWeight = '600';
   } else {
@@ -1823,15 +2413,88 @@ function applyEM() {
   document.getElementById('init-em').value = val;
 }
 
-// ── INIT ─────────────────────────────────────────────
+// ── EDIT MODAL ───────────────────────────────────────
+function openEdit(id) {
+  const item = stack.find(i => i.id === id);
+  if (!item) return;
+  document.getElementById('edit-id').value   = id;
+  document.getElementById('edit-name').value = item.name;
+  document.getElementById('edit-kr').value   = item.kr || '';
+  document.getElementById('edit-I').value    = item.I;
+  document.getElementById('edit-U').value    = item.U;
+  document.getElementById('edit-R').value    = item.R;
+  document.getElementById('edit-E').value    = item.E;
+  document.getElementById('edit-em').value   = item.em || 0;
+  updateEditPreview();
+  document.getElementById('edit-overlay').classList.add('open');
+  renderIcons();
+}
+
+function closeEdit() {
+  document.getElementById('edit-overlay').classList.remove('open');
+}
+
+function closeEditIfOutside(e) {
+  if (e.target === document.getElementById('edit-overlay')) closeEdit();
+}
+
+function clampDim(dim) {
+  const el = document.getElementById('edit-' + dim);
+  let v = parseInt(el.value);
+  if (isNaN(v)) v = 1;
+  el.value = Math.min(5, Math.max(1, v));
+}
+
+function updateEditPreview() {
+  const I = parseInt(document.getElementById('edit-I').value) || 1;
+  const U = parseInt(document.getElementById('edit-U').value) || 1;
+  const R = parseInt(document.getElementById('edit-R').value) || 1;
+  const E = parseInt(document.getElementById('edit-E').value) || 1;
+  const score = calcWSJF(I, U, R, E);
+  const v     = getVerdict(score);
+  const color = getScoreColor(score);
+  document.getElementById('edit-preview-score').textContent   = score.toFixed(1);
+  document.getElementById('edit-preview-score').style.color   = color;
+  document.getElementById('edit-preview-formula').textContent = `(${I}+${U}+${R})÷${E}`;
+  const vEl = document.getElementById('edit-preview-verdict');
+  vEl.textContent = v.short;
+  vEl.className   = `card-verdict ${v.cls}`;
+}
+
+function saveEdit() {
+  const id   = parseInt(document.getElementById('edit-id').value);
+  const item = stack.find(i => i.id === id);
+  if (!item) return;
+  const name = document.getElementById('edit-name').value.trim();
+  if (!name) { document.getElementById('edit-name').focus(); return; }
+  item.name   = name;
+  item.kr     = document.getElementById('edit-kr').value.trim();
+  item.I      = parseInt(document.getElementById('edit-I').value)  || 3;
+  item.U      = parseInt(document.getElementById('edit-U').value)  || 3;
+  item.R      = parseInt(document.getElementById('edit-R').value)  || 3;
+  item.E      = parseInt(document.getElementById('edit-E').value)  || 3;
+  item.em     = parseFloat(document.getElementById('edit-em').value) || 0;
+  item.score  = calcWSJF(item.I, item.U, item.R, item.E);
+  item.tshirt = tshirtLabel(item.E);
+  stack.sort((a, b) => b.score - a.score);
+  closeEdit();
+  renderStack();
+  saveToLS();
+}
+// safe wrapper — funciona aunque Lucide no haya cargado todavía
+function renderIcons() {
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+loadFromLS();
 switchTab('calc');
 calcEM();
 recalcCap();
 updateLive();
 updateRubricActive('E', 3);
 updateTshirtActive(3);
-// Ahora sí — DETAILS ya está definido
 ['I','U','R','E'].forEach(dim => renderDetail(dim, state[dim]));
+if (stack.length) renderStack();
 
 document.getElementById('init-name').addEventListener('keydown', e => {
   if (e.key === 'Enter') addInitiative();
@@ -1840,7 +2503,9 @@ document.getElementById('init-name').addEventListener('keydown', e => {
 document.getElementById('team-name').addEventListener('input', () => {
   const name = document.getElementById('team-name').value.trim();
   document.getElementById('stack-title').textContent = name ? `Stack Rank — ${name}` : 'Stack Rank del equipo';
+  saveToLS();
 });
 </script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" onload="lucide.createIcons()" onerror="console.warn('Lucide no cargó — íconos SVG no disponibles')"></script>
 </body>
 </html>
