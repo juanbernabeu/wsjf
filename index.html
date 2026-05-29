@@ -462,6 +462,22 @@ body {
 }
 .btn-import:hover { background: var(--lavender); border-color: var(--purple-m); }
 
+.btn-share {
+  padding: 7px 14px;
+  background: var(--teal);
+  border: none;
+  border-radius: 7px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--white);
+  cursor: pointer;
+  transition: background .15s, opacity .15s;
+  letter-spacing: .3px;
+}
+.btn-share:hover { opacity: .9; }
+.btn-share:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; opacity: 1; }
+
 /* Capacity bar */
 .cap-bar-wrap {
   background: var(--white);
@@ -1820,6 +1836,10 @@ body {
           <i data-lucide="upload" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;stroke-width:2.5"></i>
           Importar CSV
         </button>
+        <button class="btn-share" onclick="shareURL()" title="Generar link compartible">
+          <i data-lucide="link-2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;stroke-width:2.5"></i>
+          Compartir
+        </button>
         <button class="btn-export" onclick="exportCSV()" title="Exportar a Google Sheets">
           <i data-lucide="download" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;stroke-width:2.5"></i>
           Exportar CSV
@@ -1835,6 +1855,21 @@ body {
         <button onclick="doClear()" style="background:#DC2626;color:white;border:none;border-radius:6px;padding:6px 14px;font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer">Sí, limpiar</button>
         <button onclick="cancelClear()" style="background:white;color:#DC2626;border:1.5px solid #FCA5A5;border-radius:6px;padding:6px 14px;font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer">Cancelar</button>
       </div>
+    </div>
+
+    <!-- Share toast -->
+    <div id="share-toast" style="display:none;background:#F0FDFA;border:1.5px solid #5EEAD4;border-radius:10px;padding:14px 18px;margin-bottom:16px;animation:slideIn .15s ease">
+      <div style="font-size:12.5px;font-weight:700;color:#0F766E;margin-bottom:6px"><i data-lucide="link-2" style="width:15px;height:15px;vertical-align:middle;margin-right:6px;stroke:#0F766E;stroke-width:2.5"></i>Link compartible generado</div>
+      <div style="font-size:11px;color:#0F766E;margin-bottom:8px">Cualquiera que abra el link carga este stack tal cual está (equipo, capacidad, iniciativas). El link va en el hash de la URL — no toca un server.</div>
+      <input type="text" id="share-url" readonly onclick="this.select()" style="width:100%;font-family:'JetBrains Mono',monospace;font-size:10px;padding:8px 10px;border:1px solid #5EEAD4;border-radius:6px;background:white;color:#0F766E;outline:none;box-sizing:border-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:10px;flex-wrap:wrap">
+        <span id="share-len" style="font-size:10px;color:#14B8A6;font-family:'JetBrains Mono',monospace"></span>
+        <div style="display:flex;gap:6px">
+          <button onclick="copyShareUrl()" style="background:#0F766E;color:white;border:none;border-radius:5px;padding:5px 14px;font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer"><i data-lucide="copy" style="width:11px;height:11px;vertical-align:middle;margin-right:4px;stroke-width:2.5"></i>Copiar</button>
+          <button onclick="document.getElementById('share-toast').style.display='none'" style="background:white;color:#0F766E;border:1px solid #5EEAD4;border-radius:5px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer">Cerrar</button>
+        </div>
+      </div>
+      <div id="share-status" style="font-size:11px;font-weight:600;margin-top:6px;min-height:14px"></div>
     </div>
 
     <!-- Import toast -->
@@ -2133,6 +2168,12 @@ body {
       <div class="faq-q">¿Puedo volver a cargar un stack que exporté antes?</div>
       <div class="faq-a">Sí. El botón <strong>"Importar CSV"</strong> (al lado de Exportar) levanta un archivo con el mismo formato del export. Si ya hay iniciativas cargadas, te pregunta si querés <em>reemplazar</em> el stack actual o <em>agregar</em> al existente. También autocompleta el nombre del equipo desde el CSV si el campo está vacío. Útil para retomar una sesión, mergear stacks de dos equipos, o trabajar offline con un archivo compartido.</div>
     </div>
+
+    <div class="faq-item">
+      <div class="faq-q">¿Cómo le mando el stack a un stakeholder sin adjuntar un archivo?</div>
+      <div class="faq-a">Botón <strong>"Compartir"</strong> (verde, al lado de Importar). Genera un link con todo el stack codificado en el hash de la URL — equipo, capacidad e iniciativas. El link se copia automáticamente al clipboard. Quien lo abre ve el mismo stack tal cual está, y si ya tenía iniciativas cargadas, se le pregunta si reemplazar.<br><br>
+      <strong>Privacidad:</strong> el link no toca ningún server — toda la info viaja en la URL en sí (comprimida). Útil para mandar por Slack o pegar en una doc sin necesitar adjuntar CSV. <strong>Limitación:</strong> con stacks muy grandes (50+ iniciativas) la URL puede pasar los 2000 caracteres y algunos sistemas la truncan. En ese caso, mejor exportar CSV.</div>
+    </div>
   </div>
 
   <!-- SECCION 5: VISTAS Y REPORTES -->
@@ -2290,6 +2331,7 @@ body {
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <script>
 // ── STATE ────────────────────────────────────────────
 const state = { I:3, U:3, R:3, E:3, tshirt:'M' };
@@ -2565,6 +2607,137 @@ function doClear() {
   document.getElementById('confirm-modal').style.display = 'none';
   renderStack();
   saveToLS();
+}
+
+// ── SHARE BY URL ─────────────────────────────────────
+function buildSharePayload() {
+  return {
+    v: 1,
+    t: (document.getElementById('team-name')?.value || '').trim(),
+    c: {
+      d: parseFloat(document.getElementById('cap-devs').value) || 6,
+      w: parseFloat(document.getElementById('cap-weeks').value) || 12,
+      o: parseFloat(document.getElementById('cap-overhead').value) || 30
+    },
+    s: stack.map(item => ({
+      n: item.name,
+      k: item.kr || '',
+      i: item.I, u: item.U, r: item.R, e: item.E,
+      m: item.em || 0
+    }))
+  };
+}
+
+function applySharePayload(p) {
+  if (!p || p.v !== 1 || !Array.isArray(p.s)) return false;
+
+  // Equipo
+  if (typeof p.t === 'string') {
+    const el = document.getElementById('team-name');
+    if (el) el.value = p.t;
+  }
+  // Capacidad
+  if (p.c) {
+    if (p.c.d) document.getElementById('cap-devs').value = p.c.d;
+    if (p.c.w) document.getElementById('cap-weeks').value = p.c.w;
+    if (typeof p.c.o === 'number') document.getElementById('cap-overhead').value = p.c.o;
+  }
+  // Stack
+  stack.length = 0;
+  p.s.forEach((it, idx) => {
+    const I = Math.min(5, Math.max(1, parseInt(it.i) || 3));
+    const U = Math.min(5, Math.max(1, parseInt(it.u) || 3));
+    const R = Math.min(5, Math.max(1, parseInt(it.r) || 3));
+    const E = Math.min(5, Math.max(1, parseInt(it.e) || 3));
+    stack.push({
+      id: Date.now() + idx + Math.floor(Math.random() * 1e6),
+      name: (it.n || '').toString(),
+      kr: (it.k || '').toString(),
+      I, U, R, E,
+      score: calcWSJF(I, U, R, E),
+      em: parseFloat(it.m) || 0,
+      tshirt: tshirtLabel(E)
+    });
+  });
+  stack.sort((a, b) => b.score - a.score);
+  return true;
+}
+
+function shareURL() {
+  if (stack.length === 0) {
+    alert('Agregá al menos una iniciativa antes de compartir.');
+    return;
+  }
+  if (typeof LZString === 'undefined') {
+    alert('La librería de compresión no cargó. Revisá tu conexión y refrescá.');
+    return;
+  }
+  const json = JSON.stringify(buildSharePayload());
+  const compressed = LZString.compressToEncodedURIComponent(json);
+  const url = `${location.origin}${location.pathname}#s=${compressed}`;
+
+  document.getElementById('share-url').value = url;
+  document.getElementById('share-len').textContent =
+    `${url.length} caracteres · ${stack.length} iniciativa${stack.length !== 1 ? 's' : ''}`;
+  document.getElementById('share-status').textContent = '';
+
+  const toast = document.getElementById('share-toast');
+  toast.style.display = 'block';
+  renderIcons();
+
+  copyShareUrl();
+}
+
+function copyShareUrl() {
+  const el = document.getElementById('share-url');
+  const status = document.getElementById('share-status');
+  const ok = txt => { status.textContent = '✓ URL copiada al clipboard'; status.style.color = 'var(--success)'; };
+  const fail = ()  => {
+    el.focus(); el.select();
+    status.textContent = 'No pude copiar automáticamente. Seleccioná el texto y copialo con Ctrl/Cmd+C.';
+    status.style.color = 'var(--warning)';
+  };
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(el.value).then(ok, () => {
+      try { el.focus(); el.select(); document.execCommand('copy'); ok(); }
+      catch (e) { fail(); }
+    });
+  } else {
+    try { el.focus(); el.select(); document.execCommand('copy'); ok(); }
+    catch (e) { fail(); }
+  }
+}
+
+function loadFromHash() {
+  const hash = window.location.hash;
+  if (!hash.startsWith('#s=')) return false;
+  if (typeof LZString === 'undefined') return false;
+
+  try {
+    const encoded = hash.slice(3);
+    const json = LZString.decompressFromEncodedURIComponent(encoded);
+    if (!json) return false;
+    const payload = JSON.parse(json);
+    if (!payload || payload.v !== 1) return false;
+
+    const incomingCount = Array.isArray(payload.s) ? payload.s.length : 0;
+    if (stack.length > 0) {
+      const ok = confirm(
+        `El link contiene un stack de ${incomingCount} iniciativa(s).\n\n` +
+        `¿Reemplazar tu stack actual (${stack.length} iniciativa(s))?\n\n` +
+        `OK → Reemplazar\nCancelar → Mantener el actual e ignorar el link`
+      );
+      if (!ok) return false;
+    }
+
+    if (!applySharePayload(payload)) return false;
+    saveToLS();
+    return true;
+  } catch (e) {
+    console.warn('No se pudo cargar el stack del link:', e);
+    return false;
+  }
 }
 
 // ── IMPORT CSV ───────────────────────────────────────
@@ -3256,6 +3429,7 @@ function renderIcons() {
 }
 
 loadFromLS();
+loadFromHash();
 switchTab('calc');
 calcEM();
 recalcCap();
