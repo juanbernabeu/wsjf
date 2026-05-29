@@ -184,7 +184,6 @@ body {
   align-items: flex-start;
   margin-bottom: 10px;
 }
-.dim-left {}
 .dim-letter-row {
   display: flex;
   align-items: center;
@@ -514,6 +513,78 @@ body {
 .cap-fill.warn { background: var(--warning); }
 .cap-fill.over { background: var(--danger); }
 .cap-detail { font-size: 10px; color: var(--muted); }
+
+/* View toggle (Lista / Por OKR/KR) */
+.view-toggle {
+  display: inline-flex;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+  margin-bottom: 14px;
+}
+.vt-btn {
+  background: none;
+  border: none;
+  padding: 6px 12px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all .15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.vt-btn:hover { color: var(--purple); }
+.vt-btn.active { background: var(--purple); color: var(--white); }
+
+/* Group header (grouping mode) */
+.group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  margin: 16px 0 8px;
+  background: var(--white);
+  border: 1.5px solid var(--purple);
+  border-left: 4px solid var(--purple);
+  border-radius: 8px;
+}
+.group-header:first-child { margin-top: 0; }
+.group-header.no-kr {
+  border-color: var(--border);
+  border-left-color: var(--muted);
+}
+.group-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--lavender);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--purple);
+  flex-shrink: 0;
+}
+.group-header.no-kr .group-icon { color: var(--muted); }
+.group-info { flex: 1; min-width: 0; }
+.group-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.group-meta {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px;
+}
 
 /* Threshold labels */
 .threshold-labels {
@@ -888,6 +959,259 @@ body {
   margin: 10px 0 4px;
 }
 
+/* ── REPORTES ── */
+.report-section {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 22px;
+  margin-bottom: 18px;
+}
+.report-section-head { margin-bottom: 16px; }
+.report-section-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--purple);
+  letter-spacing: -.2px;
+  margin-bottom: 3px;
+}
+.report-section-sub {
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+/* KR bars */
+.kr-chart { display: flex; flex-direction: column; gap: 8px; }
+.kr-bar-row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+.kr-bar-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kr-bar-track {
+  position: relative;
+  height: 26px;
+  background: var(--lavender);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.kr-bar-fill {
+  height: 100%;
+  background: linear-gradient(to right, var(--purple), var(--purple-m));
+  border-radius: 6px;
+  transition: width .3s;
+}
+.kr-bar-fill.no-kr { background: var(--border); }
+.kr-bar-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--ink);
+  mix-blend-mode: difference;
+  filter: invert(1);
+  pointer-events: none;
+}
+
+/* Capacity chart (apilado horizontal) */
+.cap-chart-wrap { position: relative; padding-top: 22px; }
+.cap-chart-track {
+  position: relative;
+  height: 42px;
+  background: var(--lavender);
+  border-radius: 8px;
+  overflow: visible;
+  display: flex;
+}
+.cap-seg {
+  height: 100%;
+  border-right: 1px solid var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--white);
+  position: relative;
+  min-width: 2px;
+}
+.cap-seg:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+.cap-seg:last-child { border-right: none; border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+.cap-seg.v-commit   { background: var(--success); }
+.cap-seg.v-consider { background: var(--warning); }
+.cap-seg.v-parking  { background: var(--info); }
+.cap-seg.v-stop     { background: var(--danger); }
+.cap-chart-marker {
+  position: absolute;
+  top: -22px;
+  bottom: -8px;
+  width: 2px;
+  background: var(--purple-d);
+  z-index: 2;
+}
+.cap-chart-marker::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: -3px;
+  width: 8px;
+  height: 8px;
+  background: var(--purple-d);
+  transform: rotate(45deg);
+}
+.cap-chart-marker-label {
+  position: absolute;
+  top: -2px;
+  left: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--purple-d);
+  white-space: nowrap;
+  background: var(--white);
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--purple-d);
+}
+.cap-chart-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+}
+.cap-chart-legend {
+  display: flex;
+  gap: 14px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+  font-size: 10.5px;
+  color: var(--muted);
+}
+.cap-chart-legend-item { display: flex; align-items: center; gap: 5px; }
+.cap-chart-legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+/* Calibración */
+.calib-chart {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+.calib-dim { text-align: center; }
+.calib-dim-title {
+  font-size: 11px;
+  font-weight: 700;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+  border-bottom: 2px solid var(--border);
+}
+.calib-dim-title.I { color: var(--orange); border-color: var(--orange-b); }
+.calib-dim-title.U { color: var(--info); border-color: var(--info-b); }
+.calib-dim-title.R { color: var(--success); border-color: var(--success-b); }
+.calib-dim-title.E { color: var(--danger); border-color: var(--danger-b); }
+.calib-bars {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+  align-items: end;
+  height: 110px;
+}
+.calib-bar-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+  gap: 3px;
+}
+.calib-bar-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.calib-bar-wrap { width: 100%; flex: 1; display: flex; align-items: flex-end; }
+.calib-bar {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  min-height: 2px;
+  transition: height .3s;
+}
+.calib-bar.I { background: var(--orange); }
+.calib-bar.U { background: var(--info); }
+.calib-bar.R { background: var(--success); }
+.calib-bar.E { background: var(--danger); }
+.calib-bar-x {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* Tabla balance */
+.balance-table-wrap { overflow-x: auto; }
+.balance-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.balance-table th {
+  text-align: left;
+  padding: 9px 10px;
+  background: var(--lavender);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1.5px solid var(--border);
+  white-space: nowrap;
+}
+.balance-table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--ink);
+  font-family: 'JetBrains Mono', monospace;
+}
+.balance-table td:first-child {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.balance-table tr:last-child td { border-bottom: none; }
+.balance-table tr:hover td { background: var(--lavender); }
+.balance-table .b-commit   { color: var(--success); font-weight: 700; }
+.balance-table .b-consider { color: var(--warning); font-weight: 700; }
+.balance-table .b-parking  { color: var(--info);    font-weight: 700; }
+.balance-table .b-stop     { color: var(--danger);  font-weight: 700; }
+.balance-table .b-zero     { color: var(--border); }
+
+@media(max-width:768px) {
+  .kr-bar-row { grid-template-columns: 1fr; gap: 4px; }
+  .kr-bar-label { font-size: 11px; }
+  .calib-chart { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .report-section { padding: 16px; }
+  #view-reports { padding: 24px 16px 64px; }
+}
+
 /* ── EDIT MODAL ── */
 .edit-overlay {
   display: none;
@@ -1183,9 +1507,6 @@ body {
     padding: 12px 14px;
   }
 
-  /* Dim grid: columna */
-  .dim-grid { grid-template-columns: 1fr 1fr; }
-
   /* Tshirt row */
   .tshirt { font-size: 12px; padding: 6px 0; }
 
@@ -1227,12 +1548,13 @@ body {
     <div class="header-formula">( I + U + R ) ÷ E</div>
   </div>
   <div class="header-tabs">
-    <button class="nav-tab" id="tab-calc" onclick="switchTab('calc')"><i data-lucide="calculator" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;stroke-width:2"></i>Calculadora</button>
-    <button class="nav-tab active" id="tab-faq" onclick="switchTab('faq')"><i data-lucide="book-open" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;stroke-width:2"></i>Guía y FAQ</button>
+    <button class="nav-tab active" id="tab-calc" onclick="switchTab('calc')"><i data-lucide="calculator" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;stroke-width:2"></i>Calculadora</button>
+    <button class="nav-tab" id="tab-reports" onclick="switchTab('reports')"><i data-lucide="bar-chart-3" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;stroke-width:2"></i>Reportes</button>
+    <button class="nav-tab" id="tab-faq" onclick="switchTab('faq')"><i data-lucide="book-open" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;stroke-width:2"></i>Guía y FAQ</button>
   </div>
 </header>
 
-<div id="view-calc" style="display:none">
+<div id="view-calc" style="display:block">
 <div class="app">
 
   <!-- ══ LEFT — INPUT ══ -->
@@ -1426,7 +1748,7 @@ body {
       </div>
 
       <!-- Mini calculadora eng-months -->
-      <details style="margin-top:4px">
+      <details style="margin-top:4px" open>
         <summary style="font-size:11px;font-weight:700;color:var(--purple);cursor:pointer;user-select:none;padding:7px 10px;background:var(--lavender);border-radius:7px;list-style:none;display:flex;justify-content:space-between;align-items:center">
           <span><i data-lucide="calculator" style="width:13px;height:13px;vertical-align:middle;margin-right:5px;stroke-width:2;stroke:var(--purple)"></i>Calculadora de eng-months</span>
           <span style="font-size:10px;color:var(--muted)">Calculá paso a paso →</span>
@@ -1445,17 +1767,23 @@ body {
               style="width:52px;border:1.5px solid var(--border);border-radius:5px;padding:4px 7px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--ink);background:white;text-align:center;outline:none">
           </div>
           <div style="display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;margin-bottom:8px">
-            <label style="font-size:11px;font-weight:600;color:var(--ink)">Factor histórico del equipo <span style="font-weight:400;color:var(--muted)">(1.0 si no sabés)</span></label>
-            <input type="number" id="calc-factor" min="1.0" max="3.0" value="1.4" step="0.1" oninput="calcEM()"
+            <label style="font-size:11px;font-weight:600;color:var(--ink)">Factor histórico del equipo <span style="font-weight:400;color:var(--muted)">(1.5 si no tenés historial)</span></label>
+            <input type="number" id="calc-factor" min="1.0" max="3.0" value="1.5" step="0.1" oninput="calcEM()"
               style="width:52px;border:1.5px solid var(--border);border-radius:5px;padding:4px 7px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--ink);background:white;text-align:center;outline:none">
           </div>
 
           <div id="calc-em-result" style="background:var(--purple);border-radius:7px;padding:10px 14px;margin-top:6px;display:flex;justify-content:space-between;align-items:center">
-            <span style="font-size:11px;color:#C8A8F8">devs × semanas ÷ 4 × factor</span>
-            <span id="calc-em-val" style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--orange)">2.8</span>
+            <div>
+              <div style="font-size:10px;color:#9A7ACC;margin-bottom:2px">eng-months ajustados</div>
+              <span id="calc-em-val" style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--orange)">2.8</span>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:10px;color:#9A7ACC;margin-bottom:2px">remera → score E</div>
+              <span id="calc-ts-val" style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:white">M → 3</span>
+            </div>
           </div>
           <button onclick="applyEM()" style="width:100%;margin-top:6px;padding:7px;background:var(--orange);border:none;border-radius:6px;font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:700;color:white;cursor:pointer">
-            Usar este valor →
+            Usar este valor → aplica remera y E automáticamente
           </button>
           <div style="font-size:10px;color:var(--muted);margin-top:7px;line-height:1.5">
             <strong>Factor histórico:</strong> promedio de (tiempo real ÷ tiempo estimado) de las últimas 4–5 iniciativas del equipo. Si un equipo estima 3 semanas y tarda 4.2, el factor es 1.4×. Sin historial, usar 1.5× por defecto.
@@ -1501,7 +1829,7 @@ body {
     </div>
 
     <!-- Inline confirm modal -->
-    <div id="confirm-modal" style="display:none;background:#FEF2F2;border:1.5px solid #FCA5A5;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:none;align-items:center;justify-content:space-between;gap:12px;animation:slideIn .15s ease">
+    <div id="confirm-modal" style="display:none;background:#FEF2F2;border:1.5px solid #FCA5A5;border-radius:10px;padding:14px 18px;margin-bottom:16px;align-items:center;justify-content:space-between;gap:12px;animation:slideIn .15s ease">
       <span style="font-size:12.5px;font-weight:600;color:#DC2626">¿Eliminar todas las iniciativas del stack rank?</span>
       <div style="display:flex;gap:8px;flex-shrink:0">
         <button onclick="doClear()" style="background:#DC2626;color:white;border:none;border-radius:6px;padding:6px 14px;font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer">Sí, limpiar</button>
@@ -1546,9 +1874,11 @@ body {
             style="width:100%;border:1.5px solid var(--border);border-radius:7px;padding:7px 8px;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--purple);background:var(--lavender);text-align:center;outline:none">
         </div>
         <div>
-          <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Overhead %</div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Overhead % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">(ceremonias + vacaciones + soporte)</span></div>
           <input type="number" id="cap-overhead" min="0" max="60" value="30" step="5" oninput="recalcCap()"
             style="width:100%;border:1.5px solid var(--border);border-radius:7px;padding:7px 8px;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--purple);background:var(--lavender);text-align:center;outline:none">
+          <div style="font-size:9px;color:var(--muted);margin-top:3px">20% = equipo tranquilo · 30% = normal · 40%+ = mucho on-call</div>
+          <div style="font-size:9px;color:var(--muted);margin-top:4px;line-height:1.5">Ceremonias + vacaciones + soporte.<br>Mucho on-call → 40%. Tranquilo → 20%.</div>
         </div>
       </div>
 
@@ -1560,6 +1890,12 @@ body {
       </div>
       <div id="cap-formula" style="font-size:10px;color:var(--muted);margin-top:5px;margin-bottom:2px"></div>
       <div class="cap-detail" id="cap-detail">Ingresá iniciativas para ver la distribución</div>
+    </div>
+
+    <!-- View toggle: Lista / Por OKR-KR -->
+    <div class="view-toggle" id="view-toggle" style="display:none">
+      <button class="vt-btn active" id="vt-list" onclick="setGroupMode('list')"><i data-lucide="list" style="width:12px;height:12px;stroke-width:2.5;stroke:currentColor"></i>Lista</button>
+      <button class="vt-btn" id="vt-kr" onclick="setGroupMode('kr')"><i data-lucide="layers" style="width:12px;height:12px;stroke-width:2.5;stroke:currentColor"></i>Por OKR/KR</button>
     </div>
 
     <!-- Empty state -->
@@ -1578,17 +1914,17 @@ body {
         <div class="stat-val" id="stat-total" style="color:var(--purple)">0</div>
         <div class="stat-label">Iniciativas totales</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" title="Score > 4.0 — entran al plan si hay capacidad">
         <div class="stat-val" id="stat-commit" style="color:var(--success)">0</div>
-        <div class="stat-label">COMMIT</div>
+        <div class="stat-label">COMMIT (score &gt;4)</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" title="Score 1.5–4.0 — quedan para el próximo Q o si sobra capacidad">
         <div class="stat-val" id="stat-parking" style="color:var(--info)">0</div>
-        <div class="stat-label">PARKING</div>
+        <div class="stat-label">PARKING (&lt;4)</div>
       </div>
       <div class="stat-card">
         <div class="stat-val" id="stat-avg" style="color:var(--orange)">—</div>
-        <div class="stat-label">Score promedio</div>
+        <div class="stat-label">Score promedio <span id="stat-avg-ref" style="font-size:9px;display:block;margin-top:2px"></span></div>
       </div>
     </div>
 
@@ -1597,13 +1933,13 @@ body {
 </div><!-- /view-calc -->
 
 <!-- ══ FAQ VIEW ══ -->
-<div id="view-faq" style="display:block;max-width:820px;margin:0 auto;padding:40px 28px 72px">
+<div id="view-faq" style="display:none;max-width:820px;margin:0 auto;padding:40px 28px 72px">
 
   <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--orange);font-weight:700;margin-bottom:8px">Guía de uso y preguntas frecuentes</div>
   <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:24px;font-weight:800;color:var(--purple);letter-spacing:-.5px;margin-bottom:6px">Todo lo que necesitás saber para usar WSJF</div>
   <div style="font-size:14px;color:var(--muted);margin-bottom:36px;font-style:italic">Leé esto antes de tu primera sesión de scoring. Tarda 5 minutos.</div>
 
-  <!-- SECCION 1: QUE ES WSJF -->
+  <!-- SECCION 1: QUE ES WSJF Y POR QUE -->
   <div class="faq-section">
     <div class="faq-section-title">¿Qué es WSJF y por qué usarlo?</div>
 
@@ -1616,70 +1952,115 @@ body {
 
     <div class="faq-item">
       <div class="faq-q">¿Por qué necesitamos un número? ¿No alcanza con la experiencia del equipo?</div>
-      <div class="faq-a">La experiencia ayuda, pero sin un criterio compartido cada persona prioriza con su propio sesgo. El PM prioriza por impacto de producto, el TL por deuda técnica, el stakeholder por lo que le importa a él. El WSJF no reemplaza el juicio — le da un lenguaje común para que el debate sea sobre los criterios, no sobre las personas.</div>
+      <div class="faq-a">
+        El problema no es que los equipos prioricen mal. Es que cada uno prioriza bien <em>desde su perspectiva</em>. El PM prioriza por impacto de producto, el TL por deuda técnica, el stakeholder por lo que le prometió al Head. Cuando se juntan, no tienen un idioma común — y la decisión termina siendo política en vez de técnica.<br><br>
+        El WSJF no reemplaza el juicio de nadie. Obliga a externalizar los supuestos: en vez de <em>"yo creo que esto es más importante"</em>, el debate pasa a ser <em>"¿este criterio vale un 4 o un 3?"</em> — que es una conversación mucho más productiva. El resultado: la sesión de tradeoff tarda menos, los acuerdos son más sólidos, y si alguien pregunta después "¿por qué no hicimos X?", hay una respuesta objetiva.
+      </div>
     </div>
 
     <div class="faq-item">
       <div class="faq-q">¿El score es una regla absoluta? ¿La iniciativa de mayor score siempre tiene que entrar?</div>
       <div class="faq-a">No. Es una guía, no una ley. Si una iniciativa tiene R=5 (riesgo crítico activo), entra al plan <em>aunque su score WSJF sea bajo</em>. El score es objetivo, pero siempre hay contexto que no cabe en una fórmula. Lo importante es que las excepciones sean explícitas y justificadas — no el default.</div>
     </div>
+
+    <div class="faq-item">
+      <div class="faq-q">¿Qué significan COMMIT, CONSIDERAR, PARKING y STOP?</div>
+      <div class="faq-a">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+          <div style="background:var(--success-bg);border:1px solid var(--success-b);border-radius:8px;padding:10px 12px">
+            <div style="font-size:11px;font-weight:700;color:var(--success);margin-bottom:4px">✅ COMMIT — score &gt; 4.0</div>
+            <div style="font-size:11px;color:var(--ink)">Entra al plan del Q si hay capacidad. El equipo se compromete a entregarlo.</div>
+          </div>
+          <div style="background:var(--warning-bg);border:1px solid var(--warning-b);border-radius:8px;padding:10px 12px">
+            <div style="font-size:11px;font-weight:700;color:var(--warning);margin-bottom:4px">⚡ CONSIDERAR — score 2.5–4.0</div>
+            <div style="font-size:11px;color:var(--ink)">Entra si sobra capacidad o si se puede reducir el esfuerzo partiendo la iniciativa.</div>
+          </div>
+          <div style="background:var(--info-bg);border:1px solid var(--info-b);border-radius:8px;padding:10px 12px">
+            <div style="font-size:11px;font-weight:700;color:var(--info);margin-bottom:4px">⏸ PARKING — score 1.5–2.5</div>
+            <div style="font-size:11px;color:var(--ink)">No entra este Q. Queda registrada con su score para el próximo ciclo.</div>
+          </div>
+          <div style="background:var(--danger-bg);border:1px solid var(--danger-b);border-radius:8px;padding:10px 12px">
+            <div style="font-size:11px;font-weight:700;color:var(--danger);margin-bottom:4px">🛑 STOP — score &lt; 1.5</div>
+            <div style="font-size:11px;color:var(--ink)">Bajo impacto, bajo riesgo, alto esfuerzo relativo. Vale la pena preguntarse si tiene razón de existir.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Ejemplos concretos — ¿cómo cambia la conversación con WSJF?</div>
+      <div class="faq-a">
+        <div style="margin-bottom:14px">
+          <div style="font-size:11px;font-weight:700;color:var(--purple);margin-bottom:6px">Ejemplo 1 — La circular regulatoria que siempre pierde</div>
+          <div style="font-size:11.5px;color:var(--muted);line-height:1.7">El equipo tiene que implementar una normativa. No es sexy, no mueve ningún OKR de producto. Sin WSJF, siempre queda postergada porque <em>"hay cosas más importantes"</em>. Con WSJF: I=2, U=5 (deadline legal), R=5 (multa si no se cumple), E=2. <strong style="color:var(--purple)">Score = 6.0 — primera de la lista.</strong> El número hace visible lo que el argumento cualitativo no lograba.</div>
+        </div>
+        <div style="margin-bottom:14px">
+          <div style="font-size:11px;font-weight:700;color:var(--purple);margin-bottom:6px">Ejemplo 2 — El refactor que nadie quiere aprobar</div>
+          <div style="font-size:11.5px;color:var(--muted);line-height:1.7">El TL lleva tres Q pidiendo refactorizar el engine de decisiones. El PM siempre lo baja porque <em>"no genera valor para el usuario"</em>. Con WSJF: I=1, U=3, R=4, E=3. <strong style="color:var(--purple)">Score = 2.7 — visible y comparable.</strong> El debate deja de ser <em>"¿hacemos el refactor?"</em> y pasa a ser <em>"¿le ponemos U=3 o U=4?"</em> — una conversación técnica concreta.</div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--purple);margin-bottom:6px">Ejemplo 3 — Dos iniciativas que compiten por el mismo dev</div>
+          <div style="font-size:11.5px;color:var(--muted);line-height:1.7">El PM quiere la feature A (I=4, U=3, R=1, E=3 → score 2.7) y el TL quiere la migración B (I=1, U=2, R=5, E=2 → score 4.0). Sin criterio común la reunión dura una hora y gana quien argumenta mejor. <strong style="color:var(--purple)">Con WSJF la migración gana, y si el PM no está de acuerdo, tiene que argumentar contra el score — no contra el TL.</strong></div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <!-- SECCION 2: ENG-MONTHS -->
+  <!-- SECCION 2: ESFUERZO -->
   <div class="faq-section">
-    <div class="faq-section-title">¿Cómo calculo los eng-months?</div>
+    <div class="faq-section-title">Cómo estimar el esfuerzo (E)</div>
 
     <div class="faq-item">
-      <div class="faq-q">¿Qué es un eng-month exactamente?</div>
-      <div class="faq-a">Es el trabajo que puede hacer <strong>1 ingeniero en 1 mes</strong>, descontando ceremonias, PTO promedio y overhead fijo. En la práctica, 1 eng-month ≈ 3 semanas de trabajo neto de 1 persona. Si tenés 2 personas trabajando 4 semanas, eso es aproximadamente 2 eng-months (no 2 porque hay overhead de coordinación).</div>
-    </div>
-
-    <div class="faq-item">
-      <div class="faq-q">¿Cómo lo calculo paso a paso?</div>
+      <div class="faq-q">¿Cómo arranco a estimar? ¿Por dónde empiezo?</div>
       <div class="faq-a">
-        <div style="background:var(--lavender);border-radius:8px;padding:14px;font-size:12px;line-height:1.85">
-          <strong>1.</strong> Ingenieros asignados × semanas estimadas ÷ 4<br>
-          <em>Ej: 3 ingenieros × 6 semanas ÷ 4 = 4.5 eng-months brutos</em><br><br>
-          <strong>2.</strong> Multiplicar por el factor histórico del equipo<br>
-          <em>Ej: 4.5 × 1.4 (factor) = 6.3 eng-months ajustados</em><br><br>
-          <strong>3.</strong> Eso determina el score E:<br>
-          <em>6.3 eng-months → entre 6 y 12 → E = 4 (L)</em>
+        Arrancás por el tamaño en remera — es lo más intuitivo y lo que ya usás en planning. Después convertís eso a eng-months para que la calculadora pueda comparar iniciativas entre equipos.
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px">
+          <div style="text-align:center;background:var(--lavender);border-radius:8px;padding:10px"><div style="font-size:18px;font-weight:800;color:var(--ink)">XS</div><div style="font-size:10px;color:var(--muted);margin:3px 0">E = 1</div><div style="font-size:10px;color:var(--ink)">&lt; 2 sem</div><div style="font-size:10px;color:var(--muted)">&lt; 1 eng-m</div></div>
+          <div style="text-align:center;background:var(--lavender);border-radius:8px;padding:10px"><div style="font-size:18px;font-weight:800;color:var(--ink)">S</div><div style="font-size:10px;color:var(--muted);margin:3px 0">E = 2</div><div style="font-size:10px;color:var(--ink)">2–4 sem</div><div style="font-size:10px;color:var(--muted)">1–3 eng-m</div></div>
+          <div style="text-align:center;background:var(--lavender);border-radius:8px;padding:10px"><div style="font-size:18px;font-weight:800;color:var(--ink)">M</div><div style="font-size:10px;color:var(--muted);margin:3px 0">E = 3</div><div style="font-size:10px;color:var(--ink)">4–8 sem</div><div style="font-size:10px;color:var(--muted)">3–6 eng-m</div></div>
+          <div style="text-align:center;background:var(--orange-p);border-radius:8px;padding:10px"><div style="font-size:18px;font-weight:800;color:var(--orange)">L</div><div style="font-size:10px;color:var(--orange);margin:3px 0">E = 4</div><div style="font-size:10px;color:var(--orange)">8–12 sem</div><div style="font-size:10px;color:var(--orange)">6–12 eng-m</div></div>
+          <div style="text-align:center;background:var(--danger-bg);border-radius:8px;padding:10px"><div style="font-size:18px;font-weight:800;color:var(--danger)">XL</div><div style="font-size:10px;color:var(--danger);margin:3px 0">E = 5 ⚠</div><div style="font-size:10px;color:var(--danger)">&gt; 12 sem</div><div style="font-size:10px;color:var(--danger)">&gt; 12 eng-m</div></div>
         </div>
-        <div style="margin-top:8px;font-size:12px;color:var(--muted)">La calculadora de eng-months en el formulario hace esto automáticamente.</div>
+        <div style="margin-top:10px;font-size:11.5px;color:var(--muted)">En la calculadora podés elegir directamente la remera y mapea solo al score E. No hace falta que conviertas a mano.</div>
       </div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q">¿Qué es el factor histórico y cómo lo calculo?</div>
-      <div class="faq-a">Es la relación entre cuánto tarda realmente el equipo vs. cuánto estima. Se calcula tomando las últimas 4–5 iniciativas y dividiendo tiempo real ÷ tiempo estimado para cada una, y promediando.
-      <div style="background:var(--lavender);border-radius:8px;padding:12px;margin-top:10px;font-size:11.5px;line-height:1.8">
-        Ej: Iniciativa A — estimada 3 sem, tardó 4.5 sem → ratio: 1.5×<br>
-        Iniciativa B — estimada 4 sem, tardó 5 sem → ratio: 1.25×<br>
-        Iniciativa C — estimada 6 sem, tardó 8 sem → ratio: 1.33×<br>
-        <strong>Factor promedio del equipo: 1.36×</strong>
+      <div class="faq-q">¿Qué hago si tengo la remera pero no sé los eng-months?</div>
+      <div class="faq-a">
+        Usá la <strong>Calculadora de eng-months</strong> que está dentro del formulario. Ponés cuántas personas trabajan en la iniciativa y cuántas semanas estimás, y te calcula solo. La fórmula es simple:
+        <div style="background:var(--lavender);border-radius:8px;padding:14px;margin-top:10px;font-size:12px;line-height:1.85">
+          <strong>Eng-months = ingenieros × semanas ÷ 4 × factor histórico</strong><br><br>
+          Ej: 2 ingenieros × 6 semanas ÷ 4 = 3 eng-months brutos<br>
+          × factor 1.4 = <strong>4.2 eng-months ajustados → remera M → E = 3</strong>
+        </div>
       </div>
-      <div style="margin-top:8px;font-size:12px;color:var(--muted)">Si no tenés historial, usá <strong>1.5×</strong> como default conservador. La mayoría de los equipos subestiman en ese rango.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">¿Qué es el factor histórico y por qué importa?</div>
+      <div class="faq-a">Es cuánto tarda realmente tu equipo vs. lo que estima. Si estimaron 3 semanas y tardaron 4.5, el factor es 1.5×. Se calcula promediando las últimas 4–5 iniciativas.
+      <div style="background:var(--lavender);border-radius:8px;padding:12px;margin-top:10px;font-size:11.5px;line-height:1.8">
+        Iniciativa A — estimada 3 sem, tardó 4.5 sem → 1.5×<br>
+        Iniciativa B — estimada 4 sem, tardó 5 sem → 1.25×<br>
+        Iniciativa C — estimada 6 sem, tardó 8 sem → 1.33×<br>
+        <strong>Factor del equipo: 1.36×</strong>
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:var(--muted)">Sin historial: usá <strong>1.5×</strong> como default. La mayoría de los equipos subestiman en ese rango.</div>
       </div>
     </div>
 
     <div class="faq-item">
       <div class="faq-q">¿La estimación incluye testing, revisión y deploy?</div>
-      <div class="faq-a"><strong>Sí, siempre.</strong> Un eng-month comprometido cubre el trabajo completo hasta que la iniciativa está en producción y validada. Si la estimación no incluye testing o deploy, multiplicala al menos por 1.3. El error más común es estimar solo el tiempo de desarrollo y olvidar el resto.</div>
+      <div class="faq-a"><strong>Sí, siempre.</strong> El eng-month cubre el trabajo completo hasta producción. Si la estimación no incluye testing o deploy, multiplicala al menos por 1.3. El error más común es estimar solo el tiempo de desarrollo.</div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q">¿Cómo traduzco camisetas a eng-months?</div>
-      <div class="faq-a">
-        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:8px">
-          <div style="text-align:center;background:var(--lavender);border-radius:8px;padding:10px"><div style="font-size:16px;font-weight:800;color:var(--ink)">XS</div><div style="font-size:10px;color:var(--muted)">E=1</div><div style="font-size:10px;color:var(--ink)">&lt;1 eng-m</div></div>
-          <div style="text-align:center;background:var(--lavender);border-radius:8px;padding:10px"><div style="font-size:16px;font-weight:800;color:var(--ink)">S</div><div style="font-size:10px;color:var(--muted)">E=2</div><div style="font-size:10px;color:var(--ink)">1–3 eng-m</div></div>
-          <div style="text-align:center;background:var(--lavender);border-radius:8px;padding:10px"><div style="font-size:16px;font-weight:800;color:var(--ink)">M</div><div style="font-size:10px;color:var(--muted)">E=3</div><div style="font-size:10px;color:var(--ink)">3–6 eng-m</div></div>
-          <div style="text-align:center;background:var(--o3);border-radius:8px;padding:10px"><div style="font-size:16px;font-weight:800;color:var(--orange)">L</div><div style="font-size:10px;color:var(--orange)">E=4</div><div style="font-size:10px;color:var(--orange)">6–12 eng-m</div></div>
-          <div style="text-align:center;background:var(--danger-bg);border-radius:8px;padding:10px"><div style="font-size:16px;font-weight:800;color:var(--danger)">XL</div><div style="font-size:10px;color:var(--danger)">E=5 ⚠</div><div style="font-size:10px;color:var(--danger)">&gt;12 eng-m</div></div>
-        </div>
-        <div style="margin-top:10px;font-size:11px;color:var(--muted)">El score E usa la camiseta como base. Recordá que siempre se aplica el factor histórico antes de asignar el E.</div>
-      </div>
+      <div class="faq-q">¿Qué hago si una iniciativa es XL?</div>
+      <div class="faq-a">Antes de scorearla, intentá partirla. Una XL dividida en dos M tiene mejor WSJF, menor riesgo de entrega parcial, y le da al equipo la posibilidad de comprometer la primera M y mandar la segunda a parking si no hay capacidad. Si no puede partirse, scoreala como XL (E=5) y tené en cuenta que probablemente no entre este Q.</div>
     </div>
+
   </div>
 
   <!-- SECCION 3: DIMENSIONES -->
@@ -1725,7 +2106,7 @@ body {
       <div class="faq-q">¿Quién define cada dimensión?</div>
       <div class="faq-a">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-          <div style="background:var(--o3);border-radius:8px;padding:10px;font-size:11.5px"><strong style="color:var(--orange)">I — Impacto</strong><br>Define el PM. Valida el dueño del KR si I ≥ 4.</div>
+          <div style="background:var(--orange-p);border-radius:8px;padding:10px;font-size:11.5px"><strong style="color:var(--orange)">I — Impacto</strong><br>Define el PM. Valida el dueño del KR si I ≥ 4.</div>
           <div style="background:var(--lavender);border-radius:8px;padding:10px;font-size:11.5px"><strong style="color:var(--purple)">U — Urgencia</strong><br>PM + Tech Lead juntos. Alguien tiene que poner el número concreto de la pérdida.</div>
           <div style="background:var(--success-bg);border-radius:8px;padding:10px;font-size:11.5px"><strong style="color:var(--success)">R — Riesgo</strong><br>Define el Tech Lead. Si R ≥ 4, valida Arquitectura con nota escrita.</div>
           <div style="background:var(--danger-bg);border-radius:8px;padding:10px;font-size:11.5px"><strong style="color:var(--danger)">E — Esfuerzo</strong><br>Define el Tech Lead con el equipo. Siempre con factor histórico aplicado.</div>
@@ -1747,9 +2128,106 @@ body {
       <div class="faq-q">¿Cómo exporto el stack rank a Google Sheets?</div>
       <div class="faq-a">Hacé click en el botón <strong>"Exportar"</strong> (arriba a la derecha en la pantalla de la calculadora). Se descarga un archivo <code>wsjf-stack-rank.csv</code>. Después: Google Sheets → Archivo → Importar → arrastrás el CSV → separador Coma → Importar datos. El archivo incluye el nombre del equipo, todas las iniciativas, el KR asociado a cada una, los scores y la decisión.</div>
     </div>
+
+    <div class="faq-item">
+      <div class="faq-q">¿Puedo volver a cargar un stack que exporté antes?</div>
+      <div class="faq-a">Sí. El botón <strong>"Importar CSV"</strong> (al lado de Exportar) levanta un archivo con el mismo formato del export. Si ya hay iniciativas cargadas, te pregunta si querés <em>reemplazar</em> el stack actual o <em>agregar</em> al existente. También autocompleta el nombre del equipo desde el CSV si el campo está vacío. Útil para retomar una sesión, mergear stacks de dos equipos, o trabajar offline con un archivo compartido.</div>
+    </div>
+  </div>
+
+  <!-- SECCION 5: VISTAS Y REPORTES -->
+  <div class="faq-section">
+    <div class="faq-section-title">Vistas y reportes</div>
+
+    <div class="faq-item">
+      <div class="faq-q">¿Cómo veo el stack agrupado por OKR/KR en lugar de ordenado por score?</div>
+      <div class="faq-a">Arriba de la lista de iniciativas hay un toggle <strong>"Lista / Por OKR/KR"</strong>. En modo agrupado, las iniciativas se agrupan por el campo OKR/KR que cargaste, ordenadas por el score máximo de cada grupo. Cada cabecera de grupo muestra cuántas iniciativas tiene, eng-months totales y score promedio. Las iniciativas sin OKR/KR cargado caen en un grupo aparte al final. Es la vista más útil para responder <em>"¿qué tenemos planeado para este KR?"</em> en una reunión.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">¿Qué hay en el tab "Reportes"?</div>
+      <div class="faq-a">
+        Cuatro vistas para analizar el stack desde distintos ángulos. Se calculan en vivo sobre las iniciativas cargadas:
+        <ul style="margin-top:10px;padding-left:20px;line-height:1.8">
+          <li><strong>Inversión por OKR/KR</strong> — barras horizontales con eng-months totales por KR. Sirve para detectar divergencia entre <em>"decimos que el KR de fraude es prioridad"</em> y <em>"el 60% de la capacidad va a otra cosa"</em>.</li>
+          <li><strong>Capacidad acumulada por ranking</strong> — barra apilada con un segmento por iniciativa, coloreado por veredicto (COMMIT/CONSIDERAR/PARKING/STOP). La línea vertical marca tu capacidad: lo que queda a la derecha no entra al plan.</li>
+          <li><strong>Distribución de scores por dimensión</strong> — 4 mini histogramas (I, U, R, E) con cuántas iniciativas tienen cada valor 1-5. Detecta inflación de calibración: si el 80% tiene I=4 o I=5, el equipo está sobreestimando impacto.</li>
+          <li><strong>Balance por OKR/KR</strong> — tabla con número de iniciativas, eng-months, % de capacidad, score promedio y conteo por veredicto para cada KR. Vista ejecutiva para revisar con stakeholders.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">¿Cuándo es útil mirar el reporte de calibración?</div>
+      <div class="faq-a">Al final de la sesión de scoring, antes de cerrar el stack. Si todas las iniciativas terminaron con I=4 o I=5, no priorizaste nada — todas dicen ser importantes. Lo mismo con U: una distribución sana tiene una concentración en valores 2-3 y pocos casos en 5. Si todas las U son 4-5, hay <strong>inflación de urgencia</strong> y el WSJF deja de discriminar. La regla práctica: <em>si más del 20-25% de las iniciativas están en el valor 5 de una dimensión, hay que recalibrar</em>.</div>
+    </div>
   </div>
 
 </div><!-- /view-faq -->
+
+<!-- ══ REPORTES VIEW ══ -->
+<div id="view-reports" style="display:none;max-width:1100px;margin:0 auto;padding:32px 28px 64px">
+
+  <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--orange);font-weight:700;margin-bottom:8px">Análisis del stack rank</div>
+  <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:24px;font-weight:800;color:var(--purple);letter-spacing:-.5px;margin-bottom:6px">Reportes y distribución</div>
+  <div style="font-size:13px;color:var(--muted);margin-bottom:28px">Dónde está realmente la inversión vs dónde decís que está. Detectá divergencia entre narrativa y plan.</div>
+
+  <!-- Empty -->
+  <div id="reports-empty" class="empty-state" style="display:none">
+    <div class="empty-icon"><i data-lucide="bar-chart-3" style="width:40px;height:40px;stroke:var(--purple);opacity:.3;stroke-width:1.5"></i></div>
+    <div class="empty-title">Sin iniciativas para reportar</div>
+    <div class="empty-sub">Agregá al menos una iniciativa en la calculadora<br>para ver el análisis del stack rank.</div>
+  </div>
+
+  <div id="reports-content">
+
+    <!-- 1) Inversión por OKR/KR -->
+    <section class="report-section">
+      <div class="report-section-head">
+        <div>
+          <div class="report-section-title">Inversión por OKR/KR</div>
+          <div class="report-section-sub">Eng-months totales por KR. Cuanto más larga la barra, más invertís ahí.</div>
+        </div>
+      </div>
+      <div id="chart-kr" class="kr-chart"></div>
+    </section>
+
+    <!-- 2) Capacidad acumulada por ranking -->
+    <section class="report-section">
+      <div class="report-section-head">
+        <div>
+          <div class="report-section-title">Capacidad acumulada por ranking</div>
+          <div class="report-section-sub">Iniciativas en orden de score. La línea marca tu capacidad — lo que queda a la derecha no entra.</div>
+        </div>
+      </div>
+      <div id="chart-capacity" class="cap-chart"></div>
+    </section>
+
+    <!-- 3) Distribución de scores (calibración) -->
+    <section class="report-section">
+      <div class="report-section-head">
+        <div>
+          <div class="report-section-title">Distribución de scores por dimensión</div>
+          <div class="report-section-sub">¿Cómo está calibrado el equipo? Si todas las iniciativas tienen I=4 o I=5, hay inflación.</div>
+        </div>
+      </div>
+      <div id="chart-calibration" class="calib-chart"></div>
+    </section>
+
+    <!-- 4) Tabla de balance -->
+    <section class="report-section">
+      <div class="report-section-head">
+        <div>
+          <div class="report-section-title">Balance por OKR/KR</div>
+          <div class="report-section-sub">Vista ejecutiva: cuánta capacidad consume cada KR y qué tipo de iniciativas lo componen.</div>
+        </div>
+      </div>
+      <div id="report-table" class="balance-table-wrap"></div>
+    </section>
+
+  </div>
+
+</div><!-- /view-reports -->
 
 <!-- ══ EDIT MODAL ══ -->
 <div class="edit-overlay" id="edit-overlay" onclick="closeEditIfOutside(event)">
@@ -1816,6 +2294,14 @@ body {
 // ── STATE ────────────────────────────────────────────
 const state = { I:3, U:3, R:3, E:3, tshirt:'M' };
 const stack = [];
+let groupByKr = false;
+
+// ── HTML ESCAPE ─────────────────────────────────────
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 
 // ── LOCALSTORAGE ─────────────────────────────────────
 const LS_KEY = 'wsjf_stack_v1';
@@ -1938,9 +2424,14 @@ function setDim(dim, val) {
   updateLive();
 }
 
+// Mínimo de cada banda según la rúbrica E (XS <1, S 1-3, M 3-6, L 6-12, XL >12)
+const TSHIRT_MIN_EM = { XS: 0.5, S: 1, M: 3, L: 6, XL: 12 };
+
 function setTshirt(ts, e) {
   state.tshirt = ts;
   setDim('E', e);
+  const emEl = document.getElementById('init-em');
+  if (emEl) emEl.value = TSHIRT_MIN_EM[ts];
 }
 
 // ── DETAIL PANEL DATA ────────────────────────────────
@@ -2103,7 +2594,6 @@ function handleImportCSV(event) {
   const reader = new FileReader();
   reader.onload = function(e) {
     let text = e.target.result;
-    // Quitar BOM si existe
     if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
 
     const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
@@ -2113,7 +2603,7 @@ function handleImportCSV(event) {
       return;
     }
 
-    const dataLines = lines.slice(1); // omitir encabezado
+    const dataLines = lines.slice(1);
     const imported = [];
     let teamFromCSV = '';
 
@@ -2133,7 +2623,7 @@ function handleImportCSV(event) {
       const score = calcWSJF(I, U, R, E);
 
       imported.push({
-        id: Date.now() + Math.random(),
+        id: Date.now() + idx + Math.floor(Math.random() * 1e6),
         name,
         kr: cols[3].trim(),
         I, U, R, E, score,
@@ -2168,7 +2658,6 @@ function handleImportCSV(event) {
     imported.forEach(item => stack.push(item));
     stack.sort((a, b) => b.score - a.score);
 
-    // Setear nombre de equipo desde CSV si el campo está vacío
     const teamEl = document.getElementById('team-name');
     if (teamEl && !teamEl.value.trim() && teamFromCSV) {
       teamEl.value = teamFromCSV;
@@ -2200,11 +2689,10 @@ function exportCSV() {
   }
 
   const teamName = document.getElementById('team-name').value.trim() || 'equipo';
-  const teamCap  = parseFloat(document.getElementById('team-cap').value) || 20;
 
   const headers = [
     'Equipo','Ranking','Iniciativa','OKR / KR asociado',
-    'WSJF Score','I','U','R','E','Camiseta','Eng-months','Decisión'
+    'WSJF Score','I','U','R','E','Camiseta','Eng-months','Decision'
   ];
 
   const rows = stack.map((item, idx) => {
@@ -2234,20 +2722,59 @@ function exportCSV() {
   setTimeout(() => { toast.style.display = 'none'; }, 8000);
 }
 
-function copyCSV()         {}   // stub — no usado
-function closeExportModal(){}   // stub — no usado
-
 // ── RENDER STACK ─────────────────────────────────────
+function renderCard(item, idx) {
+  const v = getVerdict(item.score);
+  const color = getScoreColor(item.score);
+  const isTop3 = idx < 3;
+
+  const dimLabels = [
+    `<span class="card-dim I">I=${item.I}</span>`,
+    `<span class="card-dim U">U=${item.U}</span>`,
+    `<span class="card-dim R">R=${item.R}</span>`,
+    `<span class="card-dim E">E=${item.E}${item.tshirt ? ' / '+item.tshirt : ''}</span>`,
+  ].join('');
+
+  const emLabel = item.em > 0 ? `<span style="font-size:10px;color:var(--muted);font-weight:500">${item.em} eng-months</span>` : '';
+  const krLabel = item.kr ? `<div style="font-size:10px;color:var(--teal);font-weight:600;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px" title="${esc(item.kr)}"><i data-lucide="target" style="width:10px;height:10px;vertical-align:middle;margin-right:3px;stroke:var(--teal);stroke-width:2.5"></i>${esc(item.kr)}</div>` : '';
+
+  return `
+    <div class="initiative-card">
+      <div class="card-top">
+        <div class="card-rank ${isTop3 ? 'top' : ''}">#${idx + 1}</div>
+        <div class="card-score-wrap">
+          <div class="card-score" style="color:${color}">${item.score.toFixed(1)}</div>
+          <div class="card-score-label">WSJF</div>
+        </div>
+        <div class="card-info">
+          <div class="card-name" title="${esc(item.name)}">${esc(item.name)}</div>
+          <div class="card-dims">${dimLabels}${emLabel ? '&ensp;' + emLabel : ''}</div>
+          ${krLabel}
+        </div>
+        <div class="card-right">
+          <span class="card-verdict ${v.cls}">${v.short}</span>
+          <div style="display:flex;gap:4px;margin-top:4px">
+            <button class="btn-edit" onclick="openEdit(${item.id})" title="Editar"><i data-lucide="pencil" style="width:13px;height:13px;stroke-width:2;stroke:currentColor"></i></button>
+            <button class="btn-del" onclick="removeItem(${item.id})" title="Eliminar"><i data-lucide="x" style="width:13px;height:13px;stroke-width:2.5;stroke:currentColor"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
 function renderStack() {
   const list = document.getElementById('stack-list');
   const empty = document.getElementById('empty-state');
   const statsRow = document.getElementById('stats-row');
   const teamCap = parseFloat(document.getElementById('team-cap').value) || 20;
 
+  const toggle = document.getElementById('view-toggle');
+
   if (stack.length === 0) {
     list.innerHTML = '';
     empty.style.display = 'block';
     statsRow.style.display = 'none';
+    if (toggle) toggle.style.display = 'none';
     document.getElementById('stack-count').textContent = '0 iniciativas · ordenadas por score WSJF';
     updateCapBar(0, teamCap);
     return;
@@ -2255,69 +2782,65 @@ function renderStack() {
 
   empty.style.display = 'none';
   statsRow.style.display = 'grid';
+  if (toggle) toggle.style.display = 'inline-flex';
   document.getElementById('stack-count').textContent =
-    `${stack.length} iniciativa${stack.length !== 1 ? 's' : ''} · ordenadas por score WSJF`;
+    `${stack.length} iniciativa${stack.length !== 1 ? 's' : ''} · ${groupByKr ? 'agrupadas por OKR/KR' : 'ordenadas por score WSJF'}`;
 
-  // Build cards with capacity cutoff
-  let emAccum = 0;
-  let capLineInserted = false;
-  let capOverInserted = false;
   let html = '';
 
-  stack.forEach((item, idx) => {
-    const v = getVerdict(item.score);
-    const color = getScoreColor(item.score);
-    const isTop3 = idx < 3;
+  if (groupByKr) {
+    // Agrupar por KR
+    const groups = new Map();
+    stack.forEach(item => {
+      const key = (item.kr || '').trim() || '__no_kr__';
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(item);
+    });
 
-    // Capacity line
-    if (item.em > 0) {
-      const prevAccum = emAccum;
-      emAccum += item.em;
+    // Ordenar grupos por max score desc, "Sin OKR" al final
+    const sortedGroups = [...groups.entries()].sort(([ka, a], [kb, b]) => {
+      if (ka === '__no_kr__') return 1;
+      if (kb === '__no_kr__') return -1;
+      return Math.max(...b.map(i => i.score)) - Math.max(...a.map(i => i.score));
+    });
 
-      if (!capLineInserted && prevAccum < teamCap && emAccum >= teamCap) {
-        html += `<div class="cap-line">
-          <div class="cap-line-bar"></div>
-          <div class="cap-line-label">↑ DENTRO DE CAPACIDAD (${teamCap} eng-months)</div>
-        </div>`;
-        capLineInserted = true;
-      } else if (!capLineInserted && !capOverInserted && idx === 0 && item.em > teamCap) {
-        capLineInserted = true;
-      }
-    }
+    sortedGroups.forEach(([key, items]) => {
+      items.sort((a, b) => b.score - a.score);
+      const totalEm = items.reduce((s, i) => s + (i.em || 0), 0);
+      const avgScore = items.reduce((s, i) => s + i.score, 0) / items.length;
+      const isNoKr = key === '__no_kr__';
+      const label = isNoKr ? 'Sin OKR/KR asociado' : key;
+      const icon = isNoKr ? 'help-circle' : 'target';
 
-    const dimLabels = [
-      `<span class="card-dim I">I=${item.I}</span>`,
-      `<span class="card-dim U">U=${item.U}</span>`,
-      `<span class="card-dim R">R=${item.R}</span>`,
-      `<span class="card-dim E">E=${item.E}${item.tshirt ? ' / '+item.tshirt : ''}</span>`,
-    ].join('');
-
-    const emLabel = item.em > 0 ? `<span style="font-size:10px;color:var(--muted);font-weight:500">${item.em} eng-months</span>` : '';
-    const krLabel = item.kr ? `<div style="font-size:10px;color:var(--teal);font-weight:600;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px" title="${item.kr}"><i data-lucide="target" style="width:10px;height:10px;vertical-align:middle;margin-right:3px;stroke:var(--teal);stroke-width:2.5"></i>${item.kr}</div>` : '';
-
-    html += `
-      <div class="initiative-card">
-        <div class="card-top">
-          <div class="card-rank ${isTop3 ? 'top' : ''}">#${idx + 1}</div>
-          <div class="card-score-wrap">
-            <div class="card-score" style="color:${color}">${item.score.toFixed(1)}</div>
-            <div class="card-score-label">WSJF</div>
-          </div>
-          <div class="card-info">
-            <div class="card-name" title="${item.name}">${item.name}</div>
-            <div class="card-dims">${dimLabels}${emLabel ? '&ensp;' + emLabel : ''}</div>
-            ${krLabel}
-          </div>
-          <div class="card-right">
-            <span class="card-verdict ${v.cls}">${v.short}</span>
-            <div style="display:flex;gap:4px;margin-top:4px">
-              <button class="btn-edit" onclick="openEdit(${item.id})" title="Editar"><i data-lucide="pencil" style="width:13px;height:13px;stroke-width:2;stroke:currentColor"></i></button>
-              <button class="btn-del" onclick="removeItem(${item.id})" title="Eliminar"><i data-lucide="x" style="width:13px;height:13px;stroke-width:2.5;stroke:currentColor"></i></button>
-            </div>
-          </div>
+      html += `<div class="group-header ${isNoKr ? 'no-kr' : ''}">
+        <div class="group-icon"><i data-lucide="${icon}" style="width:14px;height:14px;stroke-width:2.5;stroke:currentColor"></i></div>
+        <div class="group-info">
+          <div class="group-name" title="${esc(label)}">${esc(label)}</div>
+          <div class="group-meta">${items.length} iniciativa${items.length !== 1 ? 's' : ''} · ${totalEm.toFixed(1)} eng-months · score promedio ${avgScore.toFixed(1)}</div>
         </div>
       </div>`;
-  });
+
+      items.forEach((item, idx) => { html += renderCard(item, idx); });
+    });
+  } else {
+    // Modo lista — con línea de capacidad
+    let emAccum = 0;
+    let capLineInserted = false;
+    stack.forEach((item, idx) => {
+      if (item.em > 0) {
+        const prevAccum = emAccum;
+        emAccum += item.em;
+        if (!capLineInserted && prevAccum < teamCap && emAccum >= teamCap) {
+          html += `<div class="cap-line">
+            <div class="cap-line-bar"></div>
+            <div class="cap-line-label">↑ DENTRO DE CAPACIDAD (${teamCap} eng-months)</div>
+          </div>`;
+          capLineInserted = true;
+        }
+      }
+      html += renderCard(item, idx);
+    });
+  }
 
   list.innerHTML = html;
   // Re-render Lucide icons in new cards
@@ -2337,10 +2860,25 @@ function renderStack() {
   document.getElementById('stat-commit').textContent = commits;
   document.getElementById('stat-parking').textContent = parkings + considers;
   document.getElementById('stat-avg').textContent = avg;
+  const avgRef = document.getElementById('stat-avg-ref');
+  if (avgRef) {
+    const a = parseFloat(avg);
+    if (a >= 4)   { avgRef.textContent = '🟢 alto'; avgRef.style.color = 'var(--success)'; }
+    else if (a >= 2.5) { avgRef.textContent = '🟡 medio'; avgRef.style.color = 'var(--warning)'; }
+    else          { avgRef.textContent = '🔴 bajo'; avgRef.style.color = 'var(--danger)'; }
+  }
 
-  // Update stack title with team name
+  // Update stack title with team name (uses textContent — no escape needed)
   const teamName = document.getElementById('team-name').value.trim();
   document.getElementById('stack-title').textContent = teamName ? `Stack Rank — ${teamName}` : 'Stack Rank del equipo';
+}
+
+function setGroupMode(mode) {
+  groupByKr = (mode === 'kr');
+  document.getElementById('vt-list').classList.toggle('active', !groupByKr);
+  document.getElementById('vt-kr').classList.toggle('active', groupByKr);
+  renderStack();
+  renderIcons();
 }
 
 function updateCapBar(used, total) {
@@ -2378,10 +2916,13 @@ function updateCapBar(used, total) {
 
 // ── TAB SWITCHING ────────────────────────────────────
 function switchTab(tab) {
-  document.getElementById('view-calc').style.display = tab === 'calc' ? 'block' : 'none';
-  document.getElementById('view-faq').style.display  = tab === 'faq'  ? 'block' : 'none';
-  document.getElementById('tab-calc').classList.toggle('active', tab === 'calc');
-  document.getElementById('tab-faq').classList.toggle('active',  tab === 'faq');
+  document.getElementById('view-calc').style.display    = tab === 'calc'    ? 'block' : 'none';
+  document.getElementById('view-faq').style.display     = tab === 'faq'     ? 'block' : 'none';
+  document.getElementById('view-reports').style.display = tab === 'reports' ? 'block' : 'none';
+  document.getElementById('tab-calc').classList.toggle('active',    tab === 'calc');
+  document.getElementById('tab-faq').classList.toggle('active',     tab === 'faq');
+  document.getElementById('tab-reports').classList.toggle('active', tab === 'reports');
+  if (tab === 'reports') renderReports();
 }
 
 // ── CAPACITY CALCULATOR ──────────────────────────────
@@ -2400,17 +2941,36 @@ function recalcCap() {
 
   renderStack();
 }
+function emToTshirt(em) {
+  if (em < 1)  return { ts:'XS', e:1 };
+  if (em < 3)  return { ts:'S',  e:2 };
+  if (em < 6)  return { ts:'M',  e:3 };
+  if (em < 12) return { ts:'L',  e:4 };
+  return              { ts:'XL', e:5 };
+}
+
 function calcEM() {
   const devs   = parseFloat(document.getElementById('calc-devs').value)   || 1;
   const weeks  = parseFloat(document.getElementById('calc-weeks').value)  || 1;
-  const factor = parseFloat(document.getElementById('calc-factor').value) || 1;
-  const em = (devs * weeks / 4) * factor;
-  document.getElementById('calc-em-val').textContent = em.toFixed(1);
+  const factor = parseFloat(document.getElementById('calc-factor').value) || 1.5;
+  const em     = (devs * weeks / 4) * factor;
+  const { ts, e } = emToTshirt(em);
+
+  document.getElementById('calc-em-val').textContent  = em.toFixed(1);
+  document.getElementById('calc-ts-val').textContent  = `${ts} → ${e}`;
 }
 
 function applyEM() {
-  const val = document.getElementById('calc-em-val').textContent;
-  document.getElementById('init-em').value = val;
+  const em        = parseFloat(document.getElementById('calc-em-val').textContent) || 0;
+  const { ts, e } = emToTshirt(em);
+
+  document.getElementById('init-em').value = em.toFixed(1);
+
+  // Aplicar remera y score E automáticamente
+  setDim('E', e);
+  updateTshirtActive(e);
+  renderDetail('E', e);
+  updateLive();
 }
 
 // ── EDIT MODAL ───────────────────────────────────────
@@ -2446,10 +3006,10 @@ function clampDim(dim) {
 }
 
 function updateEditPreview() {
-  const I = parseInt(document.getElementById('edit-I').value) || 1;
-  const U = parseInt(document.getElementById('edit-U').value) || 1;
-  const R = parseInt(document.getElementById('edit-R').value) || 1;
-  const E = parseInt(document.getElementById('edit-E').value) || 1;
+  const I = parseInt(document.getElementById('edit-I').value) || 3;
+  const U = parseInt(document.getElementById('edit-U').value) || 3;
+  const R = parseInt(document.getElementById('edit-R').value) || 3;
+  const E = parseInt(document.getElementById('edit-E').value) || 3;
   const score = calcWSJF(I, U, R, E);
   const v     = getVerdict(score);
   const color = getScoreColor(score);
@@ -2462,7 +3022,7 @@ function updateEditPreview() {
 }
 
 function saveEdit() {
-  const id   = parseInt(document.getElementById('edit-id').value);
+  const id   = parseFloat(document.getElementById('edit-id').value);
   const item = stack.find(i => i.id === id);
   if (!item) return;
   const name = document.getElementById('edit-name').value.trim();
@@ -2481,6 +3041,215 @@ function saveEdit() {
   renderStack();
   saveToLS();
 }
+// ── REPORTES ─────────────────────────────────────────
+const DIM_NAMES = { I: 'Impacto', U: 'Urgencia', R: 'Riesgo', E: 'Esfuerzo' };
+
+function groupStackByKr() {
+  const groups = new Map();
+  stack.forEach(item => {
+    const key = (item.kr || '').trim() || '__no_kr__';
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(item);
+  });
+  return groups;
+}
+
+function renderReports() {
+  const empty = document.getElementById('reports-empty');
+  const content = document.getElementById('reports-content');
+  if (stack.length === 0) {
+    empty.style.display = 'block';
+    content.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  content.style.display = 'block';
+
+  renderChartKR();
+  renderChartCapacity();
+  renderChartCalibration();
+  renderReportTable();
+  renderIcons();
+}
+
+function renderChartKR() {
+  const groups = groupStackByKr();
+  const totalAll = stack.reduce((s, i) => s + (i.em || 0), 0);
+  const groupTotals = [...groups.entries()].map(([k, items]) => ({
+    key: k,
+    items,
+    totalEm: items.reduce((s, i) => s + (i.em || 0), 0),
+    avgScore: items.reduce((s, i) => s + i.score, 0) / items.length,
+  }));
+  const maxEm = Math.max(...groupTotals.map(g => g.totalEm), 0.01);
+
+  const sorted = groupTotals.sort((a, b) => {
+    if (a.key === '__no_kr__') return 1;
+    if (b.key === '__no_kr__') return -1;
+    return b.totalEm - a.totalEm;
+  });
+
+  const html = sorted.map(g => {
+    const isNoKr = g.key === '__no_kr__';
+    const label = isNoKr ? 'Sin OKR/KR' : g.key;
+    const pct = (g.totalEm / maxEm) * 100;
+    const pctTotal = totalAll > 0 ? (g.totalEm / totalAll) * 100 : 0;
+    const emTxt = g.totalEm > 0 ? `${g.totalEm.toFixed(1)} em` : 'sin em';
+    return `<div class="kr-bar-row">
+      <div class="kr-bar-label" title="${esc(label)}">${esc(label)}</div>
+      <div class="kr-bar-track">
+        <div class="kr-bar-fill ${isNoKr ? 'no-kr' : ''}" style="width:${Math.max(pct, 2)}%"></div>
+        <div class="kr-bar-text">${emTxt} · ${g.items.length} ini · avg ${g.avgScore.toFixed(1)} · ${pctTotal.toFixed(0)}% del total</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('chart-kr').innerHTML = html ||
+    '<div style="font-size:12px;color:var(--muted);padding:14px">Sin datos suficientes</div>';
+}
+
+function renderChartCapacity() {
+  const teamCap = parseFloat(document.getElementById('team-cap').value) || 20;
+  const sorted = [...stack].sort((a, b) => b.score - a.score);
+  const totalEm = sorted.reduce((s, i) => s + (i.em || 0), 0);
+  const scale = Math.max(totalEm, teamCap) * 1.1 || 1;
+
+  let accum = 0;
+  const segs = sorted.map((item, idx) => {
+    const em = item.em || 0;
+    if (em === 0) return null;
+    const left = (accum / scale) * 100;
+    const width = (em / scale) * 100;
+    accum += em;
+    const v = getVerdict(item.score);
+    return { item, idx, left, width, v };
+  }).filter(Boolean);
+
+  const capPos = (teamCap / scale) * 100;
+
+  const segHtml = segs.map(s => `
+    <div class="cap-seg ${s.v.cls}" style="width:${s.width}%" title="#${s.idx + 1} ${esc(s.item.name)} — ${s.item.em} em · ${s.v.short}">${s.width > 3 ? (s.idx + 1) : ''}</div>
+  `).join('');
+
+  const remaining = totalEm < teamCap
+    ? `<div style="font-size:11px;color:var(--success);font-weight:600;margin-top:10px">✓ Quedan ${(teamCap - totalEm).toFixed(1)} eng-months libres</div>`
+    : totalEm > teamCap
+      ? `<div style="font-size:11px;color:var(--danger);font-weight:600;margin-top:10px">⚠ Sobre-comprometido: ${(totalEm - teamCap).toFixed(1)} eng-months arriba de capacidad</div>`
+      : `<div style="font-size:11px;color:var(--warning);font-weight:600;margin-top:10px">Al límite exacto</div>`;
+
+  const hasEm = segs.length > 0;
+
+  document.getElementById('chart-capacity').innerHTML = hasEm ? `
+    <div class="cap-chart-wrap">
+      <div class="cap-chart-track">
+        ${segHtml}
+        <div class="cap-chart-marker" style="left:${capPos}%">
+          <div class="cap-chart-marker-label">cap: ${teamCap} em</div>
+        </div>
+      </div>
+      <div class="cap-chart-axis">
+        <span>0</span>
+        <span>${scale.toFixed(0)} em</span>
+      </div>
+      <div class="cap-chart-legend">
+        <div class="cap-chart-legend-item"><div class="cap-chart-legend-dot" style="background:var(--success)"></div>COMMIT</div>
+        <div class="cap-chart-legend-item"><div class="cap-chart-legend-dot" style="background:var(--warning)"></div>CONSIDERAR</div>
+        <div class="cap-chart-legend-item"><div class="cap-chart-legend-dot" style="background:var(--info)"></div>PARKING</div>
+        <div class="cap-chart-legend-item"><div class="cap-chart-legend-dot" style="background:var(--danger)"></div>STOP</div>
+      </div>
+      ${remaining}
+    </div>
+  ` : '<div style="font-size:12px;color:var(--muted);padding:14px">Ninguna iniciativa tiene eng-months cargados. Editá las iniciativas y agregá el esfuerzo estimado.</div>';
+}
+
+function renderChartCalibration() {
+  const dims = ['I', 'U', 'R', 'E'];
+  const total = stack.length;
+
+  const html = dims.map(dim => {
+    const counts = [0, 0, 0, 0, 0];
+    stack.forEach(item => { counts[item[dim] - 1]++; });
+    const max = Math.max(...counts, 1);
+
+    const bars = counts.map((c, i) => {
+      const h = (c / max) * 100;
+      const pct = total > 0 ? Math.round((c / total) * 100) : 0;
+      return `<div class="calib-bar-col" title="${c} iniciativa${c !== 1 ? 's' : ''} con ${dim}=${i + 1} (${pct}%)">
+        <div class="calib-bar-val">${c || ''}</div>
+        <div class="calib-bar-wrap"><div class="calib-bar ${dim}" style="height:${h}%"></div></div>
+        <div class="calib-bar-x">${i + 1}</div>
+      </div>`;
+    }).join('');
+
+    return `<div class="calib-dim">
+      <div class="calib-dim-title ${dim}">${dim} — ${DIM_NAMES[dim]}</div>
+      <div class="calib-bars">${bars}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('chart-calibration').innerHTML = html;
+}
+
+function renderReportTable() {
+  const groups = groupStackByKr();
+  const teamCap = parseFloat(document.getElementById('team-cap').value) || 0;
+
+  const rows = [...groups.entries()].map(([k, items]) => {
+    const em = items.reduce((s, i) => s + (i.em || 0), 0);
+    const avg = items.reduce((s, i) => s + i.score, 0) / items.length;
+    const counts = { commit: 0, consider: 0, parking: 0, stop: 0 };
+    items.forEach(i => {
+      const s = i.score;
+      if (s > 4.0) counts.commit++;
+      else if (s > 2.5) counts.consider++;
+      else if (s > 1.5) counts.parking++;
+      else counts.stop++;
+    });
+    return { key: k, items, em, avg, counts };
+  }).sort((a, b) => {
+    if (a.key === '__no_kr__') return 1;
+    if (b.key === '__no_kr__') return -1;
+    return b.em - a.em;
+  });
+
+  const cell = (n, cls) => n > 0 ? `<td class="${cls}">${n}</td>` : `<td class="b-zero">0</td>`;
+  const pctCap = (em) => teamCap > 0 ? `${((em / teamCap) * 100).toFixed(0)}%` : '—';
+
+  const trs = rows.map(r => {
+    const label = r.key === '__no_kr__' ? 'Sin OKR/KR' : r.key;
+    return `<tr>
+      <td title="${esc(label)}">${esc(label)}</td>
+      <td>${r.items.length}</td>
+      <td>${r.em.toFixed(1)}</td>
+      <td>${pctCap(r.em)}</td>
+      <td>${r.avg.toFixed(1)}</td>
+      ${cell(r.counts.commit, 'b-commit')}
+      ${cell(r.counts.consider, 'b-consider')}
+      ${cell(r.counts.parking, 'b-parking')}
+      ${cell(r.counts.stop, 'b-stop')}
+    </tr>`;
+  }).join('');
+
+  document.getElementById('report-table').innerHTML = `
+    <table class="balance-table">
+      <thead>
+        <tr>
+          <th>OKR/KR</th>
+          <th># ini</th>
+          <th>eng-m</th>
+          <th>% cap</th>
+          <th>avg</th>
+          <th>COMMIT</th>
+          <th>CONSID</th>
+          <th>PARK</th>
+          <th>STOP</th>
+        </tr>
+      </thead>
+      <tbody>${trs}</tbody>
+    </table>
+  `;
+}
+
 // safe wrapper — funciona aunque Lucide no haya cargado todavía
 function renderIcons() {
   if (typeof lucide !== 'undefined') lucide.createIcons();

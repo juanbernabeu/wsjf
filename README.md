@@ -39,15 +39,17 @@ Cada dimensión tiene:
 
 ### Selector de camiseta (T-shirt sizing)
 
-Mapeo automático talla → E:
+Mapeo automático talla → E + autofill del campo eng-months con el mínimo de la banda:
 
-| Talla | E | Eng-months |
-|-------|---|-----------|
-| XS | 1 | < 1 |
-| S | 2 | 1 – 3 |
-| M | 3 | 3 – 6 |
-| L | 4 | 6 – 12 |
-| XL | 5 | > 12 ⚠ |
+| Talla | E | Eng-months | Autofill |
+|-------|---|------------|----------|
+| XS    | 1 | < 1        | 0.5      |
+| S     | 2 | 1 – 3      | 1        |
+| M     | 3 | 3 – 6      | 3        |
+| L     | 4 | 6 – 12     | 6        |
+| XL    | 5 | > 12 ⚠     | 12       |
+
+> Tocar el talle sobrescribe el campo eng-months con el mínimo del rango. Si querés un valor más fino dentro de la banda (ej. M=4.5), editás el número manualmente después de elegir el talle o usás la calculadora de eng-months.
 
 ### Calculadora de eng-months
 
@@ -78,6 +80,15 @@ Fórmula incorporada: `devs × semanas ÷ 4 × factor histórico`
 - **Edición inline** — modal para modificar nombre, KR y dimensiones de cualquier iniciativa ya agregada.
 - **Eliminación** individual por iniciativa.
 - **Limpiar todo** con confirmación.
+
+### Agrupar por OKR/KR
+
+Toggle "Lista / Por OKR/KR" arriba de la lista. En modo agrupado:
+
+- Iniciativas agrupadas por el OKR/KR cargado, ordenadas por el score máximo de cada grupo.
+- Cada cabecera muestra cuántas iniciativas tiene, eng-months totales y score promedio.
+- Las iniciativas sin OKR/KR caen en un grupo aparte al final.
+- Útil para responder *"¿qué tenemos planeado para este KR?"* en una reunión.
 
 ### Tracker de capacidad del equipo
 
@@ -117,6 +128,21 @@ Carga un archivo CSV con el mismo formato del export para recuperar un stack gua
 ### Persistencia local
 
 Todo el stack y el nombre de equipo se guardan automáticamente en **localStorage** del browser. Al reabrir la herramienta se restaura el estado anterior sin necesidad de reimportar.
+
+---
+
+### Reportes (tab dedicado)
+
+Cuatro vistas que se calculan en vivo sobre el stack cargado. Útiles al final de la sesión de scoring para validar el plan antes de cerrarlo.
+
+| Reporte                                  | Para qué sirve                                                                                                                                  |
+|------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Inversión por OKR/KR**                 | Barras horizontales con eng-months por KR. Detecta divergencia entre la narrativa de prioridades y dónde está realmente la capacidad.           |
+| **Capacidad acumulada por ranking**      | Barra apilada con un segmento por iniciativa, coloreada por veredicto. Línea vertical marca la capacidad: lo que queda a la derecha no entra.   |
+| **Distribución de scores por dimensión** | 4 histogramas (I, U, R, E) con la cuenta de iniciativas por valor 1-5. Detecta inflación de calibración (regla: >25% en valor 5 = recalibrar).  |
+| **Balance por OKR/KR**                   | Tabla con # iniciativas, eng-months, % de capacidad, score promedio y conteo por veredicto. Vista ejecutiva para revisar con stakeholders.      |
+
+Sin dependencias externas — todos los charts son SVG/CSS nativo.
 
 ---
 
