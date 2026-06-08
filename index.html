@@ -1617,14 +1617,23 @@ body {
       </div>
       <div style="font-size:10px;color:var(--muted);margin-bottom:0;margin-top:6px">Escribila en una oración. Si no podés, todavía no está lista para scorear.</div>
 
-      <!-- OKR / KR -->
-      <div class="ps-label" style="margin-top:14px">OKR / KR que impacta <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;color:var(--muted)">(opcional pero recomendado)</span></div>
+      <!-- OKR / KR Principal -->
+      <div class="ps-label" style="margin-top:14px">🎯 KR principal (impacto directo) <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;color:var(--muted)">(opcional pero recomendado)</span></div>
       <input type="text" class="init-input" id="init-kr"
         placeholder="ej: KR — Reducir fraude ratio a &lt;0.9% en Q2"
         maxlength="100"
         style="background:var(--lavender)"
       />
-      <div style="font-size:10px;color:var(--muted);margin-top:5px">Completar este campo obliga al PM a vincular la iniciativa a un resultado concreto. Se exporta junto al stack rank.</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:5px">Este es el KR driver de la iniciativa. Suma eng-months completos en reportes.</div>
+
+      <!-- OKR / KR Secundario -->
+      <div class="ps-label" style="margin-top:12px">🔗 KR secundario (impacto indirecto) <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;color:var(--muted)">(opcional)</span></div>
+      <input type="text" class="init-input" id="init-kr-secondary"
+        placeholder="ej: KR — Mejorar tasa de aprobación a &gt;75%"
+        maxlength="100"
+        style="background:var(--lavender)"
+      />
+      <div style="font-size:10px;color:var(--muted);margin-top:5px">Si la iniciativa también beneficia a otro KR. Se lista en reportes sin contar eng-months.</div>
 
       <!-- Categoría -->
       <div class="ps-label" style="margin-top:14px">Categoría de la iniciativa</div>
@@ -2287,7 +2296,18 @@ body {
       <div id="report-table" class="balance-table-wrap"></div>
     </section>
 
-    <!-- 6) Tabla de balance por categoría -->
+    <!-- 6) Impactos secundarios (KRs secundarios) -->
+    <section class="report-section">
+      <div class="report-section-head">
+        <div>
+          <div class="report-section-title">🔗 Impactos secundarios por KR</div>
+          <div class="report-section-sub">Iniciativas que también benefician a estos KRs (sin contar eng-months). Muestra el multi-impacto.</div>
+        </div>
+      </div>
+      <div id="chart-kr-secondary" class="kr-chart"></div>
+    </section>
+
+    <!-- 7) Tabla de balance por categoría -->
     <section class="report-section">
       <div class="report-section-head">
         <div>
@@ -2318,8 +2338,13 @@ body {
       </div>
 
       <div class="edit-field">
-        <label class="edit-label">OKR / KR asociado</label>
+        <label class="edit-label">🎯 KR principal (impacto directo)</label>
         <input type="text" class="edit-input" id="edit-kr" maxlength="100">
+      </div>
+
+      <div class="edit-field">
+        <label class="edit-label">🔗 KR secundario (impacto indirecto)</label>
+        <input type="text" class="edit-input" id="edit-kr-secondary" maxlength="100">
       </div>
 
       <div class="edit-field">
@@ -2619,9 +2644,10 @@ function addInitiative() {
   const score = calcWSJF(I, U, R, E);
   const em = parseFloat(document.getElementById('init-em').value) || 0;
   const kr = document.getElementById('init-kr').value.trim();
+  const krSecondary = document.getElementById('init-kr-secondary').value.trim();
   const category = document.getElementById('init-category').value;
 
-  stack.push({ id: Date.now(), name, kr, category, I, U, R, E, score, em, tshirt: tshirtLabel(E) });
+  stack.push({ id: Date.now(), name, kr, krSecondary, category, I, U, R, E, score, em, tshirt: tshirtLabel(E) });
   stack.sort((a, b) => b.score - a.score);
   renderStack();
   saveToLS();
@@ -2632,6 +2658,7 @@ function resetForm() {
   // NO limpiar team-name ni category — se mantienen entre iniciativas
   document.getElementById('init-name').value = '';
   document.getElementById('init-kr').value = '';
+  document.getElementById('init-kr-secondary').value = '';
   document.getElementById('init-em').value = '4.5';
   ['I','U','R','E'].forEach(d => setDim(d, 3));
   updateTshirtActive(3);
@@ -2673,6 +2700,7 @@ function buildSharePayload() {
     s: stack.map(item => ({
       n: item.name,
       k: item.kr || '',
+      ks: item.krSecondary || '',
       c: item.category || 'change-evolutivo',
       i: item.I, u: item.U, r: item.R, e: item.E,
       m: item.em || 0
@@ -2705,6 +2733,7 @@ function applySharePayload(p) {
       id: Date.now() + idx + Math.floor(Math.random() * 1e6),
       name: (it.n || '').toString(),
       kr: (it.k || '').toString(),
+      krSecondary: (it.ks || '').toString(),
       category: it.c || 'change-evolutivo',
       I, U, R, E,
       score: calcWSJF(I, U, R, E),
@@ -2835,20 +2864,42 @@ function handleImportCSV(event) {
 
     dataLines.forEach((line, idx) => {
       const cols = parseCSVLine(line);
-      // Retrocompatibilidad: formato viejo tiene 12 cols, nuevo 13
+      // Retrocompatibilidad:
+      // - Formato 1 (viejo): 12 cols (sin categoría ni KR secundario)
+      // - Formato 2: 13 cols (con categoría, sin KR secundario)
+      // - Formato 3 (nuevo): 14 cols (con categoría y KR secundario)
+      const hasKRSecondary = cols.length >= 14;
       const hasCategory = cols.length >= 13;
-      const minCols = hasCategory ? 13 : 12;
-      if (cols.length < minCols - 1) return;
+      if (cols.length < 12) return;
 
       const name = cols[2].trim();
       if (!name) return;
 
       if (idx === 0 && cols[0]) teamFromCSV = cols[0].trim();
 
-      // Si tiene categoría, los índices se desplazan +1 a partir de la col 5
-      const catLabel = hasCategory ? cols[4].trim() : '';
-      const category = CATEGORIES.find(c => c.label === catLabel)?.id || 'change-evolutivo';
-      const offset = hasCategory ? 1 : 0;
+      // Detectar formato y extraer campos
+      let kr, krSecondary, category, offset;
+      if (hasKRSecondary) {
+        // Formato 3: Team, Rank, Name, KR-Primary, KR-Secondary, Category, Score, I, U, R, E, Tshirt, EM, Decision
+        kr = cols[3].trim();
+        krSecondary = cols[4].trim();
+        const catLabel = cols[5].trim();
+        category = CATEGORIES.find(c => c.label === catLabel)?.id || 'change-evolutivo';
+        offset = 2; // KR-Secondary + Category
+      } else if (hasCategory) {
+        // Formato 2: Team, Rank, Name, KR, Category, Score, I, U, R, E, Tshirt, EM, Decision
+        kr = cols[3].trim();
+        krSecondary = '';
+        const catLabel = cols[4].trim();
+        category = CATEGORIES.find(c => c.label === catLabel)?.id || 'change-evolutivo';
+        offset = 1; // Solo Category
+      } else {
+        // Formato 1: Team, Rank, Name, KR, Score, I, U, R, E, Tshirt, EM, Decision
+        kr = cols[3].trim();
+        krSecondary = '';
+        category = 'change-evolutivo';
+        offset = 0;
+      }
 
       const I = Math.min(5, Math.max(1, parseInt(cols[5 + offset]) || 3));
       const U = Math.min(5, Math.max(1, parseInt(cols[6 + offset]) || 3));
@@ -2859,7 +2910,8 @@ function handleImportCSV(event) {
       imported.push({
         id: Date.now() + idx + Math.floor(Math.random() * 1e6),
         name,
-        kr: cols[3].trim(),
+        kr,
+        krSecondary,
         category,
         I, U, R, E, score,
         tshirt: cols[9 + offset].trim() || tshirtLabel(E),
@@ -2926,7 +2978,7 @@ function exportCSV() {
   const teamName = document.getElementById('team-name').value.trim() || 'equipo';
 
   const headers = [
-    'Equipo','Ranking','Iniciativa','OKR / KR asociado','Categoria',
+    'Equipo','Ranking','Iniciativa','KR principal','KR secundario','Categoria',
     'WSJF Score','I','U','R','E','Camiseta','Eng-months','Decision'
   ];
 
@@ -2935,7 +2987,7 @@ function exportCSV() {
     const esc = s => '"' + String(s || '').replace(/"/g, '""') + '"';
     const catLabel = CATEGORIES.find(c => c.id === (item.category || 'change-evolutivo'))?.label || '';
     return [
-      esc(teamName), idx + 1, esc(item.name), esc(item.kr || ''), esc(catLabel),
+      esc(teamName), idx + 1, esc(item.name), esc(item.kr || ''), esc(item.krSecondary || ''), esc(catLabel),
       item.score.toFixed(2), item.I, item.U, item.R, item.E,
       item.tshirt || '', item.em || '', v.short,
     ].join(',');
@@ -2973,6 +3025,7 @@ function renderCard(item, idx) {
 
   const emLabel = item.em > 0 ? `<span style="font-size:10px;color:var(--muted);font-weight:500">${item.em} eng-months</span>` : '';
   const krLabel = item.kr ? `<div style="font-size:10px;color:var(--teal);font-weight:600;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px" title="${esc(item.kr)}"><i data-lucide="target" style="width:10px;height:10px;vertical-align:middle;margin-right:3px;stroke:var(--teal);stroke-width:2.5"></i>${esc(item.kr)}</div>` : '';
+  const krSecondaryLabel = item.krSecondary ? `<div style="font-size:10px;color:#9A7ACC;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px" title="${esc(item.krSecondary)}"><i data-lucide="link" style="width:9px;height:9px;vertical-align:middle;margin-right:3px;stroke:#9A7ACC;stroke-width:2.5"></i>${esc(item.krSecondary)}</div>` : '';
   const cat = CATEGORIES.find(c => c.id === (item.category || 'change-evolutivo'));
   const catLabel = cat ? `<span style="font-size:9px;font-weight:600;padding:2px 8px;border-radius:4px;background:${cat.bgColor};color:${cat.color};border:1px solid ${cat.color}33;white-space:nowrap">${cat.label}</span>` : '';
 
@@ -2988,6 +3041,7 @@ function renderCard(item, idx) {
           <div class="card-name" title="${esc(item.name)}">${esc(item.name)}</div>
           <div class="card-dims">${dimLabels}${emLabel ? '&ensp;' + emLabel : ''}${catLabel ? '&ensp;' + catLabel : ''}</div>
           ${krLabel}
+          ${krSecondaryLabel}
         </div>
         <div class="card-right">
           <span class="card-verdict ${v.cls}">${v.short}</span>
@@ -3215,12 +3269,13 @@ function applyEM() {
 function openEdit(id) {
   const item = stack.find(i => i.id === id);
   if (!item) return;
-  document.getElementById('edit-id').value       = id;
-  document.getElementById('edit-name').value     = item.name;
-  document.getElementById('edit-kr').value       = item.kr || '';
-  document.getElementById('edit-category').value = item.category || 'change-evolutivo';
-  document.getElementById('edit-I').value        = item.I;
-  document.getElementById('edit-U').value        = item.U;
+  document.getElementById('edit-id').value           = id;
+  document.getElementById('edit-name').value         = item.name;
+  document.getElementById('edit-kr').value           = item.kr || '';
+  document.getElementById('edit-kr-secondary').value = item.krSecondary || '';
+  document.getElementById('edit-category').value     = item.category || 'change-evolutivo';
+  document.getElementById('edit-I').value            = item.I;
+  document.getElementById('edit-U').value            = item.U;
   document.getElementById('edit-R').value        = item.R;
   document.getElementById('edit-E').value        = item.E;
   document.getElementById('edit-em').value       = item.em || 0;
@@ -3266,16 +3321,17 @@ function saveEdit() {
   if (!item) return;
   const name = document.getElementById('edit-name').value.trim();
   if (!name) { document.getElementById('edit-name').focus(); return; }
-  item.name     = name;
-  item.kr       = document.getElementById('edit-kr').value.trim();
-  item.category = document.getElementById('edit-category').value;
-  item.I        = parseInt(document.getElementById('edit-I').value)  || 3;
-  item.U        = parseInt(document.getElementById('edit-U').value)  || 3;
-  item.R        = parseInt(document.getElementById('edit-R').value)  || 3;
-  item.E        = parseInt(document.getElementById('edit-E').value)  || 3;
-  item.em       = parseFloat(document.getElementById('edit-em').value) || 0;
-  item.score    = calcWSJF(item.I, item.U, item.R, item.E);
-  item.tshirt   = tshirtLabel(item.E);
+  item.name        = name;
+  item.kr          = document.getElementById('edit-kr').value.trim();
+  item.krSecondary = document.getElementById('edit-kr-secondary').value.trim();
+  item.category    = document.getElementById('edit-category').value;
+  item.I           = parseInt(document.getElementById('edit-I').value)  || 3;
+  item.U           = parseInt(document.getElementById('edit-U').value)  || 3;
+  item.R           = parseInt(document.getElementById('edit-R').value)  || 3;
+  item.E           = parseInt(document.getElementById('edit-E').value)  || 3;
+  item.em          = parseFloat(document.getElementById('edit-em').value) || 0;
+  item.score       = calcWSJF(item.I, item.U, item.R, item.E);
+  item.tshirt      = tshirtLabel(item.E);
   stack.sort((a, b) => b.score - a.score);
   closeEdit();
   renderStack();
@@ -3306,6 +3362,7 @@ function renderReports() {
   content.style.display = 'block';
 
   renderChartKR();
+  renderChartKRSecondary();
   renderChartCapacity();
   renderChartCalibration();
   renderChartCategory();
@@ -3348,6 +3405,47 @@ function renderChartKR() {
 
   document.getElementById('chart-kr').innerHTML = html ||
     '<div style="font-size:12px;color:var(--muted);padding:14px">Sin datos suficientes</div>';
+}
+
+function renderChartKRSecondary() {
+  // Agrupar iniciativas por KR secundario
+  const secondaryGroups = new Map();
+  stack.forEach(item => {
+    if (item.krSecondary && item.krSecondary.trim()) {
+      const key = item.krSecondary.trim();
+      if (!secondaryGroups.has(key)) secondaryGroups.set(key, []);
+      secondaryGroups.get(key).push(item);
+    }
+  });
+
+  if (secondaryGroups.size === 0) {
+    document.getElementById('chart-kr-secondary').innerHTML =
+      '<div style="font-size:12px;color:var(--muted);padding:14px">No hay iniciativas con KR secundario configurado</div>';
+    return;
+  }
+
+  const groupTotals = [...secondaryGroups.entries()].map(([k, items]) => ({
+    key: k,
+    items,
+    count: items.length,
+    avgScore: items.reduce((s, i) => s + i.score, 0) / items.length,
+  }));
+
+  const maxCount = Math.max(...groupTotals.map(g => g.count), 1);
+  const sorted = groupTotals.sort((a, b) => b.count - a.count);
+
+  const html = sorted.map(g => {
+    const pct = (g.count / maxCount) * 100;
+    return `<div class="kr-bar-row">
+      <div class="kr-bar-label" title="${esc(g.key)}"><i data-lucide="link" style="width:10px;height:10px;vertical-align:middle;margin-right:5px;stroke:var(--muted);stroke-width:2"></i>${esc(g.key)}</div>
+      <div class="kr-bar-track">
+        <div class="kr-bar-fill" style="width:${Math.max(pct, 2)}%;background:#9A7ACC"></div>
+        <div class="kr-bar-text">${g.count} ini (impacto secundario) · avg ${g.avgScore.toFixed(1)}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('chart-kr-secondary').innerHTML = html;
 }
 
 function renderChartCapacity() {
