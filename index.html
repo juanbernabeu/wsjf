@@ -1625,6 +1625,16 @@ body {
         style="background:var(--lavender)"
       />
       <div style="font-size:10px;color:var(--muted);margin-top:5px">Completar este campo obliga al PM a vincular la iniciativa a un resultado concreto. Se exporta junto al stack rank.</div>
+
+      <!-- Categoría -->
+      <div class="ps-label" style="margin-top:14px">Categoría de la iniciativa</div>
+      <select class="init-input" id="init-category" style="background:var(--lavender);cursor:pointer;padding-right:30px">
+        <option value="change-evolutivo">Change evolutivo</option>
+        <option value="change-estrategico">Change estratégico</option>
+        <option value="run">Run</option>
+        <option value="auditoria">Auditoría</option>
+      </select>
+      <div style="font-size:10px;color:var(--muted);margin-top:5px">Define el tipo de trabajo: mejora incremental, cambio transformacional, mantenimiento operativo o cumplimiento.</div>
     </div>
 
     <!-- Dimensiones -->
@@ -1759,7 +1769,7 @@ body {
 
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <label style="font-size:12px;color:var(--ink);font-weight:600;flex:1">Eng-months estimados</label>
-        <input type="number" id="init-em" min="0" max="50" step="0.5" value="0"
+        <input type="number" id="init-em" min="0" max="50" step="0.5" value="4.5"
           style="width:72px;border:1.5px solid var(--border);border-radius:7px;padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--purple);background:var(--lavender);text-align:center;outline:none;">
       </div>
 
@@ -2255,7 +2265,18 @@ body {
       <div id="chart-calibration" class="calib-chart"></div>
     </section>
 
-    <!-- 4) Tabla de balance -->
+    <!-- 4) Distribución por categoría -->
+    <section class="report-section">
+      <div class="report-section-head">
+        <div>
+          <div class="report-section-title">Inversión por categoría</div>
+          <div class="report-section-sub">Cuánto esfuerzo va a Run, Change evolutivo, Change estratégico y Auditoría.</div>
+        </div>
+      </div>
+      <div id="chart-category" class="kr-chart"></div>
+    </section>
+
+    <!-- 5) Tabla de balance por OKR/KR -->
     <section class="report-section">
       <div class="report-section-head">
         <div>
@@ -2264,6 +2285,17 @@ body {
         </div>
       </div>
       <div id="report-table" class="balance-table-wrap"></div>
+    </section>
+
+    <!-- 6) Tabla de balance por categoría -->
+    <section class="report-section">
+      <div class="report-section-head">
+        <div>
+          <div class="report-section-title">Balance por categoría</div>
+          <div class="report-section-sub">Desglose de iniciativas, esfuerzo y veredictos agrupados por tipo de trabajo.</div>
+        </div>
+      </div>
+      <div id="report-table-category" class="balance-table-wrap"></div>
     </section>
 
   </div>
@@ -2288,6 +2320,16 @@ body {
       <div class="edit-field">
         <label class="edit-label">OKR / KR asociado</label>
         <input type="text" class="edit-input" id="edit-kr" maxlength="100">
+      </div>
+
+      <div class="edit-field">
+        <label class="edit-label">Categoría</label>
+        <select class="edit-input" id="edit-category" style="cursor:pointer;padding-right:30px">
+          <option value="change-evolutivo">Change evolutivo</option>
+          <option value="change-estrategico">Change estratégico</option>
+          <option value="run">Run</option>
+          <option value="auditoria">Auditoría</option>
+        </select>
       </div>
 
       <label class="edit-label">Dimensiones</label>
@@ -2333,8 +2375,16 @@ body {
 
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <script>
+// ── CATEGORÍAS (configurables) ───────────────────────
+const CATEGORIES = [
+  { id: 'run', label: 'Run', color: '#6B5B8A', bgColor: '#F5F0FF' },
+  { id: 'change-evolutivo', label: 'Change evolutivo', color: '#2563EB', bgColor: '#EFF6FF' },
+  { id: 'change-estrategico', label: 'Change estratégico', color: '#7C3AED', bgColor: '#F5F0FF' },
+  { id: 'auditoria', label: 'Auditoría', color: '#D97706', bgColor: '#FFFBEB' }
+];
+
 // ── STATE ────────────────────────────────────────────
-const state = { I:3, U:3, R:3, E:3, tshirt:'M' };
+const state = { I:3, U:3, R:3, E:3, tshirt:'M', category:'change-evolutivo' };
 const stack = [];
 let groupByKr = false;
 
@@ -2569,8 +2619,9 @@ function addInitiative() {
   const score = calcWSJF(I, U, R, E);
   const em = parseFloat(document.getElementById('init-em').value) || 0;
   const kr = document.getElementById('init-kr').value.trim();
+  const category = document.getElementById('init-category').value;
 
-  stack.push({ id: Date.now(), name, kr, I, U, R, E, score, em, tshirt: tshirtLabel(E) });
+  stack.push({ id: Date.now(), name, kr, category, I, U, R, E, score, em, tshirt: tshirtLabel(E) });
   stack.sort((a, b) => b.score - a.score);
   renderStack();
   saveToLS();
@@ -2578,10 +2629,10 @@ function addInitiative() {
 }
 
 function resetForm() {
-  // NO limpiar team-name — se mantiene entre iniciativas
+  // NO limpiar team-name ni category — se mantienen entre iniciativas
   document.getElementById('init-name').value = '';
   document.getElementById('init-kr').value = '';
-  document.getElementById('init-em').value = '0';
+  document.getElementById('init-em').value = '4.5';
   ['I','U','R','E'].forEach(d => setDim(d, 3));
   updateTshirtActive(3);
   document.getElementById('init-name').focus();
@@ -2622,6 +2673,7 @@ function buildSharePayload() {
     s: stack.map(item => ({
       n: item.name,
       k: item.kr || '',
+      c: item.category || 'change-evolutivo',
       i: item.I, u: item.U, r: item.R, e: item.E,
       m: item.em || 0
     }))
@@ -2653,6 +2705,7 @@ function applySharePayload(p) {
       id: Date.now() + idx + Math.floor(Math.random() * 1e6),
       name: (it.n || '').toString(),
       kr: (it.k || '').toString(),
+      category: it.c || 'change-evolutivo',
       I, U, R, E,
       score: calcWSJF(I, U, R, E),
       em: parseFloat(it.m) || 0,
@@ -2782,26 +2835,35 @@ function handleImportCSV(event) {
 
     dataLines.forEach((line, idx) => {
       const cols = parseCSVLine(line);
-      if (cols.length < 11) return;
+      // Retrocompatibilidad: formato viejo tiene 12 cols, nuevo 13
+      const hasCategory = cols.length >= 13;
+      const minCols = hasCategory ? 13 : 12;
+      if (cols.length < minCols - 1) return;
 
       const name = cols[2].trim();
       if (!name) return;
 
       if (idx === 0 && cols[0]) teamFromCSV = cols[0].trim();
 
-      const I = Math.min(5, Math.max(1, parseInt(cols[5]) || 3));
-      const U = Math.min(5, Math.max(1, parseInt(cols[6]) || 3));
-      const R = Math.min(5, Math.max(1, parseInt(cols[7]) || 3));
-      const E = Math.min(5, Math.max(1, parseInt(cols[8]) || 3));
+      // Si tiene categoría, los índices se desplazan +1 a partir de la col 5
+      const catLabel = hasCategory ? cols[4].trim() : '';
+      const category = CATEGORIES.find(c => c.label === catLabel)?.id || 'change-evolutivo';
+      const offset = hasCategory ? 1 : 0;
+
+      const I = Math.min(5, Math.max(1, parseInt(cols[5 + offset]) || 3));
+      const U = Math.min(5, Math.max(1, parseInt(cols[6 + offset]) || 3));
+      const R = Math.min(5, Math.max(1, parseInt(cols[7 + offset]) || 3));
+      const E = Math.min(5, Math.max(1, parseInt(cols[8 + offset]) || 3));
       const score = calcWSJF(I, U, R, E);
 
       imported.push({
         id: Date.now() + idx + Math.floor(Math.random() * 1e6),
         name,
         kr: cols[3].trim(),
+        category,
         I, U, R, E, score,
-        tshirt: cols[9].trim() || tshirtLabel(E),
-        em: parseFloat(cols[10]) || 0
+        tshirt: cols[9 + offset].trim() || tshirtLabel(E),
+        em: parseFloat(cols[10 + offset]) || 0
       });
     });
 
@@ -2864,15 +2926,16 @@ function exportCSV() {
   const teamName = document.getElementById('team-name').value.trim() || 'equipo';
 
   const headers = [
-    'Equipo','Ranking','Iniciativa','OKR / KR asociado',
+    'Equipo','Ranking','Iniciativa','OKR / KR asociado','Categoria',
     'WSJF Score','I','U','R','E','Camiseta','Eng-months','Decision'
   ];
 
   const rows = stack.map((item, idx) => {
     const v   = getVerdict(item.score);
     const esc = s => '"' + String(s || '').replace(/"/g, '""') + '"';
+    const catLabel = CATEGORIES.find(c => c.id === (item.category || 'change-evolutivo'))?.label || '';
     return [
-      esc(teamName), idx + 1, esc(item.name), esc(item.kr || ''),
+      esc(teamName), idx + 1, esc(item.name), esc(item.kr || ''), esc(catLabel),
       item.score.toFixed(2), item.I, item.U, item.R, item.E,
       item.tshirt || '', item.em || '', v.short,
     ].join(',');
@@ -2910,6 +2973,8 @@ function renderCard(item, idx) {
 
   const emLabel = item.em > 0 ? `<span style="font-size:10px;color:var(--muted);font-weight:500">${item.em} eng-months</span>` : '';
   const krLabel = item.kr ? `<div style="font-size:10px;color:var(--teal);font-weight:600;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px" title="${esc(item.kr)}"><i data-lucide="target" style="width:10px;height:10px;vertical-align:middle;margin-right:3px;stroke:var(--teal);stroke-width:2.5"></i>${esc(item.kr)}</div>` : '';
+  const cat = CATEGORIES.find(c => c.id === (item.category || 'change-evolutivo'));
+  const catLabel = cat ? `<span style="font-size:9px;font-weight:600;padding:2px 8px;border-radius:4px;background:${cat.bgColor};color:${cat.color};border:1px solid ${cat.color}33;white-space:nowrap">${cat.label}</span>` : '';
 
   return `
     <div class="initiative-card">
@@ -2921,7 +2986,7 @@ function renderCard(item, idx) {
         </div>
         <div class="card-info">
           <div class="card-name" title="${esc(item.name)}">${esc(item.name)}</div>
-          <div class="card-dims">${dimLabels}${emLabel ? '&ensp;' + emLabel : ''}</div>
+          <div class="card-dims">${dimLabels}${emLabel ? '&ensp;' + emLabel : ''}${catLabel ? '&ensp;' + catLabel : ''}</div>
           ${krLabel}
         </div>
         <div class="card-right">
@@ -3150,14 +3215,15 @@ function applyEM() {
 function openEdit(id) {
   const item = stack.find(i => i.id === id);
   if (!item) return;
-  document.getElementById('edit-id').value   = id;
-  document.getElementById('edit-name').value = item.name;
-  document.getElementById('edit-kr').value   = item.kr || '';
-  document.getElementById('edit-I').value    = item.I;
-  document.getElementById('edit-U').value    = item.U;
-  document.getElementById('edit-R').value    = item.R;
-  document.getElementById('edit-E').value    = item.E;
-  document.getElementById('edit-em').value   = item.em || 0;
+  document.getElementById('edit-id').value       = id;
+  document.getElementById('edit-name').value     = item.name;
+  document.getElementById('edit-kr').value       = item.kr || '';
+  document.getElementById('edit-category').value = item.category || 'change-evolutivo';
+  document.getElementById('edit-I').value        = item.I;
+  document.getElementById('edit-U').value        = item.U;
+  document.getElementById('edit-R').value        = item.R;
+  document.getElementById('edit-E').value        = item.E;
+  document.getElementById('edit-em').value       = item.em || 0;
   updateEditPreview();
   document.getElementById('edit-overlay').classList.add('open');
   renderIcons();
@@ -3200,15 +3266,16 @@ function saveEdit() {
   if (!item) return;
   const name = document.getElementById('edit-name').value.trim();
   if (!name) { document.getElementById('edit-name').focus(); return; }
-  item.name   = name;
-  item.kr     = document.getElementById('edit-kr').value.trim();
-  item.I      = parseInt(document.getElementById('edit-I').value)  || 3;
-  item.U      = parseInt(document.getElementById('edit-U').value)  || 3;
-  item.R      = parseInt(document.getElementById('edit-R').value)  || 3;
-  item.E      = parseInt(document.getElementById('edit-E').value)  || 3;
-  item.em     = parseFloat(document.getElementById('edit-em').value) || 0;
-  item.score  = calcWSJF(item.I, item.U, item.R, item.E);
-  item.tshirt = tshirtLabel(item.E);
+  item.name     = name;
+  item.kr       = document.getElementById('edit-kr').value.trim();
+  item.category = document.getElementById('edit-category').value;
+  item.I        = parseInt(document.getElementById('edit-I').value)  || 3;
+  item.U        = parseInt(document.getElementById('edit-U').value)  || 3;
+  item.R        = parseInt(document.getElementById('edit-R').value)  || 3;
+  item.E        = parseInt(document.getElementById('edit-E').value)  || 3;
+  item.em       = parseFloat(document.getElementById('edit-em').value) || 0;
+  item.score    = calcWSJF(item.I, item.U, item.R, item.E);
+  item.tshirt   = tshirtLabel(item.E);
   stack.sort((a, b) => b.score - a.score);
   closeEdit();
   renderStack();
@@ -3241,7 +3308,9 @@ function renderReports() {
   renderChartKR();
   renderChartCapacity();
   renderChartCalibration();
+  renderChartCategory();
   renderReportTable();
+  renderReportTableCategory();
   renderIcons();
 }
 
@@ -3408,6 +3477,114 @@ function renderReportTable() {
       <thead>
         <tr>
           <th>OKR/KR</th>
+          <th># ini</th>
+          <th>eng-m</th>
+          <th>% cap</th>
+          <th>avg</th>
+          <th>COMMIT</th>
+          <th>CONSID</th>
+          <th>PARK</th>
+          <th>STOP</th>
+        </tr>
+      </thead>
+      <tbody>${trs}</tbody>
+    </table>
+  `;
+}
+
+function renderChartCategory() {
+  const categoryGroups = new Map();
+  CATEGORIES.forEach(cat => categoryGroups.set(cat.id, []));
+
+  stack.forEach(item => {
+    const catId = item.category || 'change-evolutivo';
+    if (!categoryGroups.has(catId)) categoryGroups.set(catId, []);
+    categoryGroups.get(catId).push(item);
+  });
+
+  const totalAll = stack.reduce((s, i) => s + (i.em || 0), 0);
+  const categoryTotals = CATEGORIES.map(cat => {
+    const items = categoryGroups.get(cat.id) || [];
+    const totalEm = items.reduce((s, i) => s + (i.em || 0), 0);
+    const avgScore = items.length > 0 ? items.reduce((s, i) => s + i.score, 0) / items.length : 0;
+    return { cat, items, totalEm, avgScore };
+  }).filter(g => g.items.length > 0);
+
+  const maxEm = Math.max(...categoryTotals.map(g => g.totalEm), 0.01);
+
+  const html = categoryTotals.sort((a, b) => b.totalEm - a.totalEm).map(g => {
+    const pct = (g.totalEm / maxEm) * 100;
+    const pctTotal = totalAll > 0 ? (g.totalEm / totalAll) * 100 : 0;
+    const emTxt = g.totalEm > 0 ? `${g.totalEm.toFixed(1)} em` : 'sin em';
+    return `<div class="kr-bar-row">
+      <div class="kr-bar-label" style="display:flex;align-items:center;gap:6px">
+        <span style="width:10px;height:10px;border-radius:2px;background:${g.cat.color};flex-shrink:0"></span>
+        ${esc(g.cat.label)}
+      </div>
+      <div class="kr-bar-track">
+        <div class="kr-bar-fill" style="width:${Math.max(pct, 2)}%;background:${g.cat.color}"></div>
+        <div class="kr-bar-text">${emTxt} · ${g.items.length} ini · avg ${g.avgScore.toFixed(1)} · ${pctTotal.toFixed(0)}% del total</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('chart-category').innerHTML = html ||
+    '<div style="font-size:12px;color:var(--muted);padding:14px">Sin datos suficientes</div>';
+}
+
+function renderReportTableCategory() {
+  const categoryGroups = new Map();
+  CATEGORIES.forEach(cat => categoryGroups.set(cat.id, []));
+
+  stack.forEach(item => {
+    const catId = item.category || 'change-evolutivo';
+    if (!categoryGroups.has(catId)) categoryGroups.set(catId, []);
+    categoryGroups.get(catId).push(item);
+  });
+
+  const teamCap = parseFloat(document.getElementById('team-cap').value) || 0;
+
+  const rows = CATEGORIES.map(cat => {
+    const items = categoryGroups.get(cat.id) || [];
+    if (items.length === 0) return null;
+    const em = items.reduce((s, i) => s + (i.em || 0), 0);
+    const avg = items.reduce((s, i) => s + i.score, 0) / items.length;
+    const counts = { commit: 0, consider: 0, parking: 0, stop: 0 };
+    items.forEach(i => {
+      const s = i.score;
+      if (s > 4.0) counts.commit++;
+      else if (s > 2.5) counts.consider++;
+      else if (s > 1.5) counts.parking++;
+      else counts.stop++;
+    });
+    return { cat, items, em, avg, counts };
+  }).filter(Boolean).sort((a, b) => b.em - a.em);
+
+  const cell = (n, cls) => n > 0 ? `<td class="${cls}">${n}</td>` : `<td class="b-zero">0</td>`;
+  const pctCap = (em) => teamCap > 0 ? `${((em / teamCap) * 100).toFixed(0)}%` : '—';
+
+  const trs = rows.map(r => {
+    return `<tr>
+      <td style="display:flex;align-items:center;gap:6px">
+        <span style="width:10px;height:10px;border-radius:2px;background:${r.cat.color};flex-shrink:0"></span>
+        ${esc(r.cat.label)}
+      </td>
+      <td>${r.items.length}</td>
+      <td>${r.em.toFixed(1)}</td>
+      <td>${pctCap(r.em)}</td>
+      <td>${r.avg.toFixed(1)}</td>
+      ${cell(r.counts.commit, 'b-commit')}
+      ${cell(r.counts.consider, 'b-consider')}
+      ${cell(r.counts.parking, 'b-parking')}
+      ${cell(r.counts.stop, 'b-stop')}
+    </tr>`;
+  }).join('');
+
+  document.getElementById('report-table-category').innerHTML = `
+    <table class="balance-table">
+      <thead>
+        <tr>
+          <th>Categoría</th>
           <th># ini</th>
           <th>eng-m</th>
           <th>% cap</th>
