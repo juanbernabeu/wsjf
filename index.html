@@ -1220,12 +1220,71 @@ body {
 .balance-table .b-stop     { color: var(--danger);  font-weight: 700; }
 .balance-table .b-zero     { color: var(--border); }
 
+/* Pie chart */
+.pie-chart-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  padding: 20px 0;
+}
+.pie-chart-svg {
+  flex-shrink: 0;
+}
+.pie-chart-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pie-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+.pie-legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.pie-legend-label {
+  font-weight: 600;
+  color: var(--ink);
+  min-width: 140px;
+}
+.pie-legend-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+.pie-slice {
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.pie-slice:hover {
+  opacity: 0.85;
+}
+.pie-tooltip {
+  position: absolute;
+  background: var(--ink);
+  color: var(--white);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  pointer-events: none;
+  z-index: 1000;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
 @media(max-width:768px) {
   .kr-bar-row { grid-template-columns: 1fr; gap: 4px; }
   .kr-bar-label { font-size: 11px; }
   .calib-chart { grid-template-columns: repeat(2, 1fr); gap: 14px; }
   .report-section { padding: 16px; }
   #view-reports { padding: 24px 16px 64px; }
+  .pie-chart-container { flex-direction: column; gap: 20px; }
 }
 
 /* ── EDIT MODAL ── */
@@ -2282,6 +2341,9 @@ body {
           <div class="report-section-sub">Cuánto esfuerzo va a Run, Change evolutivo, Change estratégico y Auditoría.</div>
         </div>
       </div>
+      <!-- Pie chart -->
+      <div id="chart-category-pie" style="margin-bottom:24px"></div>
+      <!-- Bar chart -->
       <div id="chart-category" class="kr-chart"></div>
     </section>
 
@@ -3365,6 +3427,7 @@ function renderReports() {
   renderChartKRSecondary();
   renderChartCapacity();
   renderChartCalibration();
+  renderPieChartCategory();
   renderChartCategory();
   renderReportTable();
   renderReportTableCategory();
@@ -3587,6 +3650,104 @@ function renderReportTable() {
       </thead>
       <tbody>${trs}</tbody>
     </table>
+  `;
+}
+
+function renderPieChartCategory() {
+  const categoryGroups = new Map();
+  CATEGORIES.forEach(cat => categoryGroups.set(cat.id, []));
+
+  stack.forEach(item => {
+    const catId = item.category || 'change-evolutivo';
+    if (!categoryGroups.has(catId)) categoryGroups.set(catId, []);
+    categoryGroups.get(catId).push(item);
+  });
+
+  const totalAll = stack.reduce((s, i) => s + (i.em || 0), 0);
+  if (totalAll === 0) {
+    document.getElementById('chart-category-pie').innerHTML =
+      '<div style="font-size:12px;color:var(--muted);padding:14px;text-align:center">No hay eng-months asignados</div>';
+    return;
+  }
+
+  const categoryTotals = CATEGORIES.map(cat => {
+    const items = categoryGroups.get(cat.id) || [];
+    const totalEm = items.reduce((s, i) => s + (i.em || 0), 0);
+    return { cat, items, totalEm };
+  }).filter(g => g.totalEm > 0);
+
+  // Generar SVG pie chart
+  const size = 200;
+  const radius = 80;
+  const cx = size / 2;
+  const cy = size / 2;
+
+  let currentAngle = -90; // Empezar arriba
+  const slices = categoryTotals.map(g => {
+    const pct = (g.totalEm / totalAll) * 100;
+    const angle = (pct / 100) * 360;
+    const startAngle = currentAngle;
+    const endAngle = currentAngle + angle;
+    currentAngle = endAngle;
+
+    // Convertir ángulos a radianes
+    const startRad = (startAngle * Math.PI) / 180;
+    const endRad = (endAngle * Math.PI) / 180;
+
+    // Calcular puntos del arco
+    const x1 = cx + radius * Math.cos(startRad);
+    const y1 = cy + radius * Math.sin(startRad);
+    const x2 = cx + radius * Math.cos(endRad);
+    const y2 = cy + radius * Math.sin(endRad);
+
+    const largeArc = angle > 180 ? 1 : 0;
+
+    const path = `M ${cx},${cy} L ${x1},${y1} A ${radius},${radius} 0 ${largeArc},1 ${x2},${y2} Z`;
+
+    // Calcular posición del label (en el medio del slice)
+    const midAngle = (startAngle + endAngle) / 2;
+    const midRad = (midAngle * Math.PI) / 180;
+    const labelRadius = radius * 0.65;
+    const labelX = cx + labelRadius * Math.cos(midRad);
+    const labelY = cy + labelRadius * Math.sin(midRad);
+
+    return { ...g, path, pct, labelX, labelY, midAngle };
+  });
+
+  const slicesHTML = slices.map((s, idx) => `
+    <g class="pie-slice" data-category="${s.cat.id}">
+      <path d="${s.path}" fill="${s.cat.color}" stroke="var(--white)" stroke-width="2"/>
+      <text x="${s.labelX}" y="${s.labelY}" text-anchor="middle" dominant-baseline="middle"
+        fill="white" font-size="11" font-weight="700" font-family="'JetBrains Mono', monospace">
+        ${s.pct.toFixed(0)}%
+      </text>
+      <text x="${s.labelX}" y="${s.labelY + 12}" text-anchor="middle" dominant-baseline="middle"
+        fill="white" font-size="9" font-weight="600" font-family="'Plus Jakarta Sans', sans-serif">
+        ${s.totalEm.toFixed(1)} em
+      </text>
+    </g>
+  `).join('');
+
+  const legendHTML = categoryTotals.map(g => {
+    const pct = (g.totalEm / totalAll) * 100;
+    return `
+      <div class="pie-legend-item">
+        <div class="pie-legend-color" style="background:${g.cat.color}"></div>
+        <div class="pie-legend-label">${esc(g.cat.label)}</div>
+        <div class="pie-legend-value">${g.totalEm.toFixed(1)} em (${pct.toFixed(1)}%)</div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('chart-category-pie').innerHTML = `
+    <div class="pie-chart-container">
+      <svg class="pie-chart-svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+        ${slicesHTML}
+      </svg>
+      <div class="pie-chart-legend">
+        ${legendHTML}
+      </div>
+    </div>
   `;
 }
 
