@@ -60,7 +60,7 @@ Mapeo automático talla → E + autofill del campo eng-months con el mínimo de 
 Fórmula incorporada: `devs × semanas ÷ 4 × factor histórico`
 
 - Calcula el esfuerzo ajustado por la velocidad real del equipo.
-- **Factor histórico** = promedio de (tiempo real ÷ tiempo estimado) de las últimas 4–5 iniciativas. Si no hay historial: 1.5× por defecto.
+- **Factor histórico** = promedio de (tiempo real ÷ tiempo estimado) de las últimas 4–5 iniciativas. Si no hay historial: 1.2× por defecto.
 
 ### Score en tiempo real
 

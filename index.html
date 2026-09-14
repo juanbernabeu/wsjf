@@ -1877,8 +1877,8 @@ body {
               style="width:52px;border:1.5px solid var(--border);border-radius:5px;padding:4px 7px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--ink);background:white;text-align:center;outline:none">
           </div>
           <div style="display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;margin-bottom:8px">
-            <label style="font-size:11px;font-weight:600;color:var(--ink)">Factor histórico del equipo <span style="font-weight:400;color:var(--muted)">(1.5 si no tenés historial)</span></label>
-            <input type="number" id="calc-factor" min="1.0" max="3.0" value="1.5" step="0.1" oninput="calcEM()"
+            <label style="font-size:11px;font-weight:600;color:var(--ink)">Factor histórico del equipo <span style="font-weight:400;color:var(--muted)">(1.2 si no tenés historial)</span></label>
+            <input type="number" id="calc-factor" min="1.0" max="3.0" value="1.2" step="0.1" oninput="calcEM()"
               style="width:52px;border:1.5px solid var(--border);border-radius:5px;padding:4px 7px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--ink);background:white;text-align:center;outline:none">
           </div>
 
@@ -1896,7 +1896,7 @@ body {
             Usar este valor → aplica remera y E automáticamente
           </button>
           <div style="font-size:10px;color:var(--muted);margin-top:7px;line-height:1.5">
-            <strong>Factor histórico:</strong> promedio de (tiempo real ÷ tiempo estimado) de las últimas 4–5 iniciativas del equipo. Si un equipo estima 3 semanas y tarda 4.2, el factor es 1.4×. Sin historial, usar 1.5× por defecto.
+            <strong>Factor histórico:</strong> promedio de (tiempo real ÷ tiempo estimado) de las últimas 4–5 iniciativas del equipo. Si un equipo estima 3 semanas y tarda 4.2, el factor es 1.4×. Sin historial, usar 1.2× por defecto.
           </div>
         </div>
       </details>
@@ -2221,7 +2221,7 @@ body {
         Iniciativa C — estimada 6 sem, tardó 8 sem → 1.33×<br>
         <strong>Factor del equipo: 1.36×</strong>
       </div>
-      <div style="margin-top:8px;font-size:12px;color:var(--muted)">Sin historial: usá <strong>1.5×</strong> como default. La mayoría de los equipos subestiman en ese rango.</div>
+      <div style="margin-top:8px;font-size:12px;color:var(--muted)">Sin historial: usá <strong>1.2×</strong> como default. La mayoría de los equipos subestiman en ese rango.</div>
       </div>
     </div>
 
@@ -3540,7 +3540,7 @@ function emToTshirt(em) {
 function calcEM() {
   const devs   = parseFloat(document.getElementById('calc-devs').value)   || 1;
   const weeks  = parseFloat(document.getElementById('calc-weeks').value)  || 1;
-  const factor = parseFloat(document.getElementById('calc-factor').value) || 1.5;
+  const factor = parseFloat(document.getElementById('calc-factor').value) || 1.2;
   const em     = (devs * weeks / 4) * factor;
   const { ts, e } = emToTshirt(em);
 
