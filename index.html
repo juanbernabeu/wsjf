@@ -1265,18 +1265,6 @@ body {
 .pie-slice:hover {
   opacity: 0.85;
 }
-.pie-tooltip {
-  position: absolute;
-  background: var(--ink);
-  color: var(--white);
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 11px;
-  pointer-events: none;
-  z-index: 1000;
-  white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}
 
 @media(max-width:768px) {
   .kr-bar-row { grid-template-columns: 1fr; gap: 4px; }
@@ -2704,7 +2692,7 @@ function addInitiative() {
 
   const { I, U, R, E } = state;
   const score = calcWSJF(I, U, R, E);
-  const em = parseFloat(document.getElementById('init-em').value) || 0;
+  const em = Math.max(0, parseFloat(document.getElementById('init-em').value) || 0);
   const kr = document.getElementById('init-kr').value.trim();
   const krSecondary = document.getElementById('init-kr-secondary').value.trim();
   const category = document.getElementById('init-category').value;
@@ -2799,7 +2787,7 @@ function applySharePayload(p) {
       category: it.c || 'change-evolutivo',
       I, U, R, E,
       score: calcWSJF(I, U, R, E),
-      em: parseFloat(it.m) || 0,
+      em: Math.max(0, parseFloat(it.m) || 0),
       tshirt: tshirtLabel(E)
     });
   });
@@ -2977,7 +2965,7 @@ function handleImportCSV(event) {
         category,
         I, U, R, E, score,
         tshirt: cols[9 + offset].trim() || tshirtLabel(E),
-        em: parseFloat(cols[10 + offset]) || 0
+        em: Math.max(0, parseFloat(cols[10 + offset]) || 0)
       });
     });
 
@@ -3391,7 +3379,7 @@ function saveEdit() {
   item.U           = parseInt(document.getElementById('edit-U').value)  || 3;
   item.R           = parseInt(document.getElementById('edit-R').value)  || 3;
   item.E           = parseInt(document.getElementById('edit-E').value)  || 3;
-  item.em          = parseFloat(document.getElementById('edit-em').value) || 0;
+  item.em          = Math.max(0, parseFloat(document.getElementById('edit-em').value) || 0);
   item.score       = calcWSJF(item.I, item.U, item.R, item.E);
   item.tshirt      = tshirtLabel(item.E);
   stack.sort((a, b) => b.score - a.score);
@@ -3410,6 +3398,31 @@ function groupStackByKr() {
     groups.get(key).push(item);
   });
   return groups;
+}
+
+// Agrupa el stack por categoría. Ids que no matchean ninguna CATEGORIES
+// caen en el fallback en vez de perderse (mismo criterio que category || fallback).
+function computeCategoryTotals() {
+  const knownIds = new Set(CATEGORIES.map(c => c.id));
+  const groups = new Map();
+  CATEGORIES.forEach(cat => groups.set(cat.id, []));
+
+  stack.forEach(item => {
+    const catId = knownIds.has(item.category) ? item.category : 'change-evolutivo';
+    groups.get(catId).push(item);
+  });
+
+  const totalAll = stack.reduce((s, i) => s + (i.em || 0), 0);
+
+  const totals = CATEGORIES.map(cat => {
+    const items = groups.get(cat.id) || [];
+    const totalEm = items.reduce((s, i) => s + (i.em || 0), 0);
+    const avgScore = items.length > 0 ? items.reduce((s, i) => s + i.score, 0) / items.length : 0;
+    const pct = totalAll > 0 ? (totalEm / totalAll) * 100 : 0;
+    return { cat, items, totalEm, avgScore, pct };
+  });
+
+  return { totals, totalAll };
 }
 
 function renderReports() {
@@ -3654,27 +3667,16 @@ function renderReportTable() {
 }
 
 function renderPieChartCategory() {
-  const categoryGroups = new Map();
-  CATEGORIES.forEach(cat => categoryGroups.set(cat.id, []));
+  const { totals, totalAll } = computeCategoryTotals();
 
-  stack.forEach(item => {
-    const catId = item.category || 'change-evolutivo';
-    if (!categoryGroups.has(catId)) categoryGroups.set(catId, []);
-    categoryGroups.get(catId).push(item);
-  });
-
-  const totalAll = stack.reduce((s, i) => s + (i.em || 0), 0);
   if (totalAll === 0) {
     document.getElementById('chart-category-pie').innerHTML =
       '<div style="font-size:12px;color:var(--muted);padding:14px;text-align:center">No hay eng-months asignados</div>';
     return;
   }
 
-  const categoryTotals = CATEGORIES.map(cat => {
-    const items = categoryGroups.get(cat.id) || [];
-    const totalEm = items.reduce((s, i) => s + (i.em || 0), 0);
-    return { cat, items, totalEm };
-  }).filter(g => g.totalEm > 0);
+  const categoryTotals = totals.filter(g => g.totalEm > 0);
+  const isFullCircle = categoryTotals.length === 1;
 
   // Generar SVG pie chart
   const size = 200;
@@ -3684,8 +3686,7 @@ function renderPieChartCategory() {
 
   let currentAngle = -90; // Empezar arriba
   const slices = categoryTotals.map(g => {
-    const pct = (g.totalEm / totalAll) * 100;
-    const angle = (pct / 100) * 360;
+    const angle = (g.pct / 100) * 360;
     const startAngle = currentAngle;
     const endAngle = currentAngle + angle;
     currentAngle = endAngle;
@@ -3702,6 +3703,8 @@ function renderPieChartCategory() {
 
     const largeArc = angle > 180 ? 1 : 0;
 
+    // Con un solo slice, start y end caen en el mismo punto (arco degenerado
+    // e invisible) — ese caso se dibuja como círculo completo, no como path.
     const path = `M ${cx},${cy} L ${x1},${y1} A ${radius},${radius} 0 ${largeArc},1 ${x2},${y2} Z`;
 
     // Calcular posición del label (en el medio del slice)
@@ -3711,12 +3714,16 @@ function renderPieChartCategory() {
     const labelX = cx + labelRadius * Math.cos(midRad);
     const labelY = cy + labelRadius * Math.sin(midRad);
 
-    return { ...g, path, pct, labelX, labelY, midAngle };
+    return { ...g, path, angle, labelX, labelY };
   });
 
-  const slicesHTML = slices.map((s, idx) => `
-    <g class="pie-slice" data-category="${s.cat.id}">
-      <path d="${s.path}" fill="${s.cat.color}" stroke="var(--white)" stroke-width="2"/>
+  const slicesHTML = slices.map(s => {
+    const shape = isFullCircle
+      ? `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="${s.cat.color}" stroke="var(--white)" stroke-width="2"/>`
+      : `<path d="${s.path}" fill="${s.cat.color}" stroke="var(--white)" stroke-width="2"/>`;
+    // Slices muy angostas no tienen lugar para las dos líneas de texto sin
+    // que se salgan de la wedge — el dato exacto ya está en la leyenda.
+    const labelHTML = s.angle < 20 ? '' : `
       <text x="${s.labelX}" y="${s.labelY}" text-anchor="middle" dominant-baseline="middle"
         fill="white" font-size="11" font-weight="700" font-family="'JetBrains Mono', monospace">
         ${s.pct.toFixed(0)}%
@@ -3724,20 +3731,21 @@ function renderPieChartCategory() {
       <text x="${s.labelX}" y="${s.labelY + 12}" text-anchor="middle" dominant-baseline="middle"
         fill="white" font-size="9" font-weight="600" font-family="'Plus Jakarta Sans', sans-serif">
         ${s.totalEm.toFixed(1)} em
-      </text>
-    </g>
-  `).join('');
-
-  const legendHTML = categoryTotals.map(g => {
-    const pct = (g.totalEm / totalAll) * 100;
+      </text>`;
     return `
+    <g class="pie-slice" data-category="${s.cat.id}">
+      ${shape}${labelHTML}
+    </g>
+  `;
+  }).join('');
+
+  const legendHTML = categoryTotals.map(g => `
       <div class="pie-legend-item">
         <div class="pie-legend-color" style="background:${g.cat.color}"></div>
         <div class="pie-legend-label">${esc(g.cat.label)}</div>
-        <div class="pie-legend-value">${g.totalEm.toFixed(1)} em (${pct.toFixed(1)}%)</div>
+        <div class="pie-legend-value">${g.totalEm.toFixed(1)} em (${g.pct.toFixed(0)}%)</div>
       </div>
-    `;
-  }).join('');
+    `).join('');
 
   document.getElementById('chart-category-pie').innerHTML = `
     <div class="pie-chart-container">
@@ -3752,28 +3760,19 @@ function renderPieChartCategory() {
 }
 
 function renderChartCategory() {
-  const categoryGroups = new Map();
-  CATEGORIES.forEach(cat => categoryGroups.set(cat.id, []));
+  const { totals, totalAll } = computeCategoryTotals();
 
-  stack.forEach(item => {
-    const catId = item.category || 'change-evolutivo';
-    if (!categoryGroups.has(catId)) categoryGroups.set(catId, []);
-    categoryGroups.get(catId).push(item);
-  });
+  if (totalAll === 0) {
+    document.getElementById('chart-category').innerHTML =
+      '<div style="font-size:12px;color:var(--muted);padding:14px;text-align:center">No hay eng-months asignados</div>';
+    return;
+  }
 
-  const totalAll = stack.reduce((s, i) => s + (i.em || 0), 0);
-  const categoryTotals = CATEGORIES.map(cat => {
-    const items = categoryGroups.get(cat.id) || [];
-    const totalEm = items.reduce((s, i) => s + (i.em || 0), 0);
-    const avgScore = items.length > 0 ? items.reduce((s, i) => s + i.score, 0) / items.length : 0;
-    return { cat, items, totalEm, avgScore };
-  }).filter(g => g.items.length > 0);
-
+  const categoryTotals = totals.filter(g => g.items.length > 0);
   const maxEm = Math.max(...categoryTotals.map(g => g.totalEm), 0.01);
 
   const html = categoryTotals.sort((a, b) => b.totalEm - a.totalEm).map(g => {
     const pct = (g.totalEm / maxEm) * 100;
-    const pctTotal = totalAll > 0 ? (g.totalEm / totalAll) * 100 : 0;
     const emTxt = g.totalEm > 0 ? `${g.totalEm.toFixed(1)} em` : 'sin em';
     return `<div class="kr-bar-row">
       <div class="kr-bar-label" style="display:flex;align-items:center;gap:6px">
@@ -3782,7 +3781,7 @@ function renderChartCategory() {
       </div>
       <div class="kr-bar-track">
         <div class="kr-bar-fill" style="width:${Math.max(pct, 2)}%;background:${g.cat.color}"></div>
-        <div class="kr-bar-text">${emTxt} · ${g.items.length} ini · avg ${g.avgScore.toFixed(1)} · ${pctTotal.toFixed(0)}% del total</div>
+        <div class="kr-bar-text">${emTxt} · ${g.items.length} ini · avg ${g.avgScore.toFixed(1)} · ${g.pct.toFixed(0)}% del total</div>
       </div>
     </div>`;
   }).join('');
@@ -3792,32 +3791,27 @@ function renderChartCategory() {
 }
 
 function renderReportTableCategory() {
-  const categoryGroups = new Map();
-  CATEGORIES.forEach(cat => categoryGroups.set(cat.id, []));
+  const { totals, totalAll } = computeCategoryTotals();
 
-  stack.forEach(item => {
-    const catId = item.category || 'change-evolutivo';
-    if (!categoryGroups.has(catId)) categoryGroups.set(catId, []);
-    categoryGroups.get(catId).push(item);
-  });
+  if (totalAll === 0) {
+    document.getElementById('report-table-category').innerHTML =
+      '<div style="font-size:12px;color:var(--muted);padding:14px;text-align:center">No hay eng-months asignados</div>';
+    return;
+  }
 
   const teamCap = parseFloat(document.getElementById('team-cap').value) || 0;
 
-  const rows = CATEGORIES.map(cat => {
-    const items = categoryGroups.get(cat.id) || [];
-    if (items.length === 0) return null;
-    const em = items.reduce((s, i) => s + (i.em || 0), 0);
-    const avg = items.reduce((s, i) => s + i.score, 0) / items.length;
+  const rows = totals.filter(g => g.items.length > 0).map(g => {
     const counts = { commit: 0, consider: 0, parking: 0, stop: 0 };
-    items.forEach(i => {
+    g.items.forEach(i => {
       const s = i.score;
       if (s > 4.0) counts.commit++;
       else if (s > 2.5) counts.consider++;
       else if (s > 1.5) counts.parking++;
       else counts.stop++;
     });
-    return { cat, items, em, avg, counts };
-  }).filter(Boolean).sort((a, b) => b.em - a.em);
+    return { cat: g.cat, items: g.items, em: g.totalEm, avg: g.avgScore, counts };
+  }).sort((a, b) => b.em - a.em);
 
   const cell = (n, cls) => n > 0 ? `<td class="${cls}">${n}</td>` : `<td class="b-zero">0</td>`;
   const pctCap = (em) => teamCap > 0 ? `${((em / teamCap) * 100).toFixed(0)}%` : '—';
