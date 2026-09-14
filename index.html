@@ -1853,7 +1853,7 @@ body {
 
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <label style="font-size:12px;color:var(--ink);font-weight:600;flex:1">Eng-months estimados</label>
-        <input type="number" id="init-em" min="0" max="50" step="0.5" value="4.5"
+        <input type="number" id="init-em" min="0" max="50" step="0.5" value="4.5" oninput="syncEffortFromEm()"
           style="width:72px;border:1.5px solid var(--border);border-radius:7px;padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--purple);background:var(--lavender);text-align:center;outline:none;">
       </div>
 
@@ -2525,7 +2525,7 @@ body {
 
       <div class="edit-field">
         <label class="edit-label">Eng-months</label>
-        <input type="number" class="edit-input" id="edit-em" min="0" max="50" step="0.5" value="0" style="max-width:100px">
+        <input type="number" class="edit-input" id="edit-em" min="0" max="50" step="0.5" value="0" style="max-width:100px" oninput="syncEditEffortFromEm()">
       </div>
 
       <div class="edit-score-preview">
@@ -3561,6 +3561,15 @@ function applyEM() {
   updateLive();
 }
 
+// Editar "Eng-months estimados" a mano también tiene que mover la
+// camiseta/esfuerzo — sino queda un E que no refleja el eng-months real.
+function syncEffortFromEm() {
+  const em = parseFloat(document.getElementById('init-em').value);
+  if (isNaN(em) || em < 0) return;
+  const { e } = emToTshirt(em);
+  setDim('E', e);
+}
+
 // ── EDIT MODAL ───────────────────────────────────────
 function openEdit(id) {
   const item = stack.find(i => i.id === id);
@@ -3609,6 +3618,16 @@ function updateEditPreview() {
   const vEl = document.getElementById('edit-preview-verdict');
   vEl.textContent = v.short;
   vEl.className   = `card-verdict ${v.cls}`;
+}
+
+// Mismo problema que en el formulario principal: si editás el eng-months
+// a mano en el modal, el esfuerzo (E) tiene que seguirlo.
+function syncEditEffortFromEm() {
+  const em = parseFloat(document.getElementById('edit-em').value);
+  if (isNaN(em) || em < 0) return;
+  const { e } = emToTshirt(em);
+  document.getElementById('edit-E').value = e;
+  updateEditPreview();
 }
 
 function saveEdit() {
