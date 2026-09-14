@@ -1718,7 +1718,7 @@ body {
         <option value="run">Run</option>
         <option value="auditoria">Auditoría</option>
       </select>
-      <div style="font-size:10px;color:var(--muted);margin-top:5px">Define el tipo de trabajo: mejora incremental, cambio transformacional, mantenimiento operativo o cumplimiento.</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:5px">Change evolutivo = mejora sobre algo existente · Change estratégico = capacidad nueva · Run = mantenimiento/soporte · Auditoría = cumplimiento regulatorio.</div>
     </div>
 
     <!-- Dimensiones -->
@@ -2017,7 +2017,6 @@ body {
           <input type="number" id="cap-overhead" min="0" max="60" value="30" step="5" oninput="recalcCap()"
             style="width:100%;border:1.5px solid var(--border);border-radius:7px;padding:7px 8px;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--purple);background:var(--lavender);text-align:center;outline:none">
           <div style="font-size:9px;color:var(--muted);margin-top:3px">20% = equipo tranquilo · 30% = normal · 40%+ = mucho on-call</div>
-          <div style="font-size:9px;color:var(--muted);margin-top:4px;line-height:1.5">Ceremonias + vacaciones + soporte.<br>Mucho on-call → 40%. Tranquilo → 20%.</div>
         </div>
       </div>
 
@@ -2107,22 +2106,23 @@ body {
       <div class="faq-a">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
           <div style="background:var(--success-bg);border:1px solid var(--success-b);border-radius:8px;padding:10px 12px">
-            <div style="font-size:11px;font-weight:700;color:var(--success);margin-bottom:4px">✅ COMMIT — score &gt; 4.0</div>
+            <div style="font-size:11px;font-weight:700;color:var(--success);margin-bottom:4px">✅ COMMIT — score &gt; <span id="faq-t-commit">4.0</span></div>
             <div style="font-size:11px;color:var(--ink)">Entra al plan del Q si hay capacidad. El equipo se compromete a entregarlo.</div>
           </div>
           <div style="background:var(--warning-bg);border:1px solid var(--warning-b);border-radius:8px;padding:10px 12px">
-            <div style="font-size:11px;font-weight:700;color:var(--warning);margin-bottom:4px">⚡ CONSIDERAR — score 2.5–4.0</div>
+            <div style="font-size:11px;font-weight:700;color:var(--warning);margin-bottom:4px">⚡ CONSIDERAR — score <span id="faq-t-consider">2.5–4.0</span></div>
             <div style="font-size:11px;color:var(--ink)">Entra si sobra capacidad o si se puede reducir el esfuerzo partiendo la iniciativa.</div>
           </div>
           <div style="background:var(--info-bg);border:1px solid var(--info-b);border-radius:8px;padding:10px 12px">
-            <div style="font-size:11px;font-weight:700;color:var(--info);margin-bottom:4px">⏸ PARKING — score 1.5–2.5</div>
+            <div style="font-size:11px;font-weight:700;color:var(--info);margin-bottom:4px">⏸ PARKING — score <span id="faq-t-parking">1.5–2.5</span></div>
             <div style="font-size:11px;color:var(--ink)">No entra este Q. Queda registrada con su score para el próximo ciclo.</div>
           </div>
           <div style="background:var(--danger-bg);border:1px solid var(--danger-b);border-radius:8px;padding:10px 12px">
-            <div style="font-size:11px;font-weight:700;color:var(--danger);margin-bottom:4px">🛑 STOP — score &lt; 1.5</div>
+            <div style="font-size:11px;font-weight:700;color:var(--danger);margin-bottom:4px">🛑 STOP — score &lt; <span id="faq-t-stop">1.5</span></div>
             <div style="font-size:11px;color:var(--ink)">Bajo impacto, bajo riesgo, alto esfuerzo relativo. Vale la pena preguntarse si tiene razón de existir.</div>
           </div>
         </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:8px">Estos cortes se ajustan solos según la escala activa del stack (lineal o Fibonacci) — ver <a href="#" onclick="switchTab('faq');document.getElementById('faq-escala').scrollIntoView();return false" style="color:var(--purple);font-weight:600">Escala Fibonacci</a>.</div>
       </div>
     </div>
 
@@ -2131,19 +2131,54 @@ body {
       <div class="faq-a">
         <div style="margin-bottom:14px">
           <div style="font-size:11px;font-weight:700;color:var(--purple);margin-bottom:6px">Ejemplo 1 — La circular regulatoria que siempre pierde</div>
-          <div style="font-size:11.5px;color:var(--muted);line-height:1.7">El equipo tiene que implementar una normativa. No es sexy, no mueve ningún OKR de producto. Sin WSJF, siempre queda postergada porque <em>"hay cosas más importantes"</em>. Con WSJF: I=2, U=5 (deadline legal), R=5 (multa si no se cumple), E=2. <strong style="color:var(--purple)">Score = 6.0 — primera de la lista.</strong> El número hace visible lo que el argumento cualitativo no lograba.</div>
+          <div style="font-size:11.5px;color:var(--muted);line-height:1.7">El equipo tiene que implementar una normativa. No es sexy, no mueve ningún OKR de producto. Sin WSJF, siempre queda postergada porque <em>"hay cosas más importantes"</em>. Con WSJF: I=2, U=5 (deadline legal), R=5 (multa si no se cumple), E=2. <strong style="color:var(--purple)">Score = <span id="faq-ex1-score">6.0</span> — primera de la lista.</strong> El número hace visible lo que el argumento cualitativo no lograba.</div>
         </div>
         <div style="margin-bottom:14px">
           <div style="font-size:11px;font-weight:700;color:var(--purple);margin-bottom:6px">Ejemplo 2 — El refactor que nadie quiere aprobar</div>
-          <div style="font-size:11.5px;color:var(--muted);line-height:1.7">El TL lleva tres Q pidiendo refactorizar el engine de decisiones. El PM siempre lo baja porque <em>"no genera valor para el usuario"</em>. Con WSJF: I=1, U=3, R=4, E=3. <strong style="color:var(--purple)">Score = 2.7 — visible y comparable.</strong> El debate deja de ser <em>"¿hacemos el refactor?"</em> y pasa a ser <em>"¿le ponemos U=3 o U=4?"</em> — una conversación técnica concreta.</div>
+          <div style="font-size:11.5px;color:var(--muted);line-height:1.7">El TL lleva tres Q pidiendo refactorizar el engine de decisiones. El PM siempre lo baja porque <em>"no genera valor para el usuario"</em>. Con WSJF: I=1, U=3, R=4, E=3. <strong style="color:var(--purple)">Score = <span id="faq-ex2-score">2.7</span> — visible y comparable.</strong> El debate deja de ser <em>"¿hacemos el refactor?"</em> y pasa a ser <em>"¿le ponemos U=3 o U=4?"</em> — una conversación técnica concreta.</div>
         </div>
         <div>
           <div style="font-size:11px;font-weight:700;color:var(--purple);margin-bottom:6px">Ejemplo 3 — Dos iniciativas que compiten por el mismo dev</div>
-          <div style="font-size:11.5px;color:var(--muted);line-height:1.7">El PM quiere la feature A (I=4, U=3, R=1, E=3 → score 2.7) y el TL quiere la migración B (I=1, U=2, R=5, E=2 → score 4.0). Sin criterio común la reunión dura una hora y gana quien argumenta mejor. <strong style="color:var(--purple)">Con WSJF la migración gana, y si el PM no está de acuerdo, tiene que argumentar contra el score — no contra el TL.</strong></div>
+          <div style="font-size:11.5px;color:var(--muted);line-height:1.7">El PM quiere la feature A (I=4, U=3, R=1, E=3 → score <span id="faq-ex3a-score">2.7</span>) y el TL quiere la migración B (I=1, U=2, R=5, E=2 → score <span id="faq-ex3b-score">4.0</span>). Sin criterio común la reunión dura una hora y gana quien argumenta mejor. <strong style="color:var(--purple)">Con WSJF la migración gana, y si el PM no está de acuerdo, tiene que argumentar contra el score — no contra el TL.</strong></div>
         </div>
       </div>
     </div>
 
+  </div>
+
+  <!-- SECCION 1.5: ESCALA FIBONACCI -->
+  <div class="faq-section" id="faq-escala">
+    <div class="faq-section-title">Escala Fibonacci — I/U/R por dentro</div>
+
+    <div class="faq-item">
+      <div class="faq-q">¿Qué es la escala Fibonacci y en qué cambia el cálculo?</div>
+      <div class="faq-a">Los sliders y las rúbricas de I, U y R siguen siendo 1 a 5 — lo que cambia es el peso con el que cada nivel entra a la fórmula. En la escala <strong>lineal</strong> (la original), nivel = peso: 1,2,3,4,5. En <strong>Fibonacci</strong>, los niveles 4 y 5 pesan más: 1,2,3,<strong>5</strong>,<strong>8</strong>. El esfuerzo (E) nunca se transforma, en ninguna de las dos escalas — sigue siendo el divisor 1-5 tal cual.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">¿Por qué existiría una escala alternativa a la lineal?</div>
+      <div class="faq-a">En la escala lineal, la distancia entre "bajo" (1) y "medio" (2) es la misma que entre "importante" (4) y "crítico" (5) — un punto es un punto. Fibonacci separa más los niveles altos: la diferencia entre 4 y 5 pasa a ser el doble que entre 1 y 2. El efecto práctico es que una iniciativa realmente crítica (nivel 5 en varias dimensiones) se despega más claramente del resto del stack en vez de mezclarse con las que son solo "importantes".</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">¿Cómo sé en qué escala está mi stack ahora?</div>
+      <div class="faq-a">Mirá el badge junto al indicador "Guardado", arriba de la lista de iniciativas. Dice <strong>"Escala: Fibonacci"</strong> (pill lila, fija) o <strong>"Escala: Lineal (1-5) — migrar a Fibonacci →"</strong> (pill amarilla, clickeable). Un stack nuevo o recién vaciado con "Limpiar todo" arranca siempre en Fibonacci.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">¿Cómo migro a Fibonacci? ¿Puedo volver a la escala lineal después?</div>
+      <div class="faq-a">Clickeá el badge amarillo y confirmá. Recalcula el score de <strong>todas</strong> las iniciativas del stack con la fórmula Fibonacci y reordena el ranking — algunos veredictos (COMMIT/CONSIDERAR/PARKING/STOP) pueden cambiar porque los umbrales también se reajustan a la nueva escala. <strong>Es de un solo sentido:</strong> una vez migrado no hay botón para volver a lineal. Un stack nunca mezcla las dos escalas — todas sus iniciativas usan siempre la misma.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Si comparto un link o exporto un CSV, ¿la escala queda fijada ahí?</div>
+      <div class="faq-a">Sí. La escala es parte de lo que se guarda en el link y en la columna <strong>Escala</strong> del CSV. Un link viejo (escala lineal) va a mostrar siempre los mismos números y el mismo orden, sin importar qué escala esté usando el resto del equipo en ese momento — abrirlo no lo migra ni lo mezcla con nada. Si migrás tu stack y volvés a generar un link, ese nuevo link ya es Fibonacci; el link viejo que ya circulaba sigue existiendo tal cual, con los números de antes.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">¿Puedo importar un CSV viejo (sin Fibonacci) a un stack que ya está en Fibonacci?</div>
+      <div class="faq-a">Para <strong>agregarlo</strong> al stack existente, no — la app bloquea el import y te avisa que las escalas no coinciden, porque mezclar dos escalas en el mismo stack rompe el ranking (los scores no son comparables entre sí). Si necesitás cargar ese CSV, elegí <strong>reemplazar</strong> el stack en vez de agregar, o migrá tu stack actual a Fibonacci primero y después importá.</div>
+    </div>
   </div>
 
   <!-- SECCION 2: ESFUERZO -->
@@ -2265,12 +2300,13 @@ body {
 
     <div class="faq-item">
       <div class="faq-q">¿Cómo exporto el stack rank a Google Sheets?</div>
-      <div class="faq-a">Hacé click en el botón <strong>"Exportar"</strong> (arriba a la derecha en la pantalla de la calculadora). Se descarga un archivo <code>wsjf-stack-rank.csv</code>. Después: Google Sheets → Archivo → Importar → arrastrás el CSV → separador Coma → Importar datos. El archivo incluye el nombre del equipo, todas las iniciativas, el KR asociado a cada una, los scores y la decisión.</div>
+      <div class="faq-a">Hacé click en el botón <strong>"Exportar"</strong> (arriba a la derecha en la pantalla de la calculadora). Se descarga un archivo <code>wsjf-&lt;equipo&gt;.csv</code>. Después: Google Sheets → Archivo → Importar → arrastrás el CSV → separador Coma → Importar datos. El archivo incluye el nombre del equipo, todas las iniciativas, el KR principal y secundario, la categoría, los scores, la decisión y la escala (Lineal/Fibonacci) con la que se calculó cada score.</div>
     </div>
 
     <div class="faq-item">
       <div class="faq-q">¿Puedo volver a cargar un stack que exporté antes?</div>
-      <div class="faq-a">Sí. El botón <strong>"Importar CSV"</strong> (al lado de Exportar) levanta un archivo con el mismo formato del export. Si ya hay iniciativas cargadas, te pregunta si querés <em>reemplazar</em> el stack actual o <em>agregar</em> al existente. También autocompleta el nombre del equipo desde el CSV si el campo está vacío. Útil para retomar una sesión, mergear stacks de dos equipos, o trabajar offline con un archivo compartido.</div>
+      <div class="faq-a">Sí. El botón <strong>"Importar CSV"</strong> (al lado de Exportar) levanta un archivo con el mismo formato del export. Si ya hay iniciativas cargadas, te pregunta si querés <em>reemplazar</em> el stack actual o <em>agregar</em> al existente. También autocompleta el nombre del equipo desde el CSV si el campo está vacío. Útil para retomar una sesión, mergear stacks de dos equipos, o trabajar offline con un archivo compartido.<br><br>
+      <strong>Importante:</strong> si el CSV usa una escala distinta a la del stack actual (uno Lineal y el otro Fibonacci), la opción de <em>agregar</em> se bloquea — hay que <em>reemplazar</em> el stack o migrar primero. Un stack nunca mezcla dos escalas (ver <a href="#" onclick="switchTab('faq');document.getElementById('faq-escala').scrollIntoView();return false" style="color:var(--purple);font-weight:600">Escala Fibonacci</a>).</div>
     </div>
 
     <div class="faq-item">
@@ -2285,19 +2321,40 @@ body {
     <div class="faq-section-title">Vistas y reportes</div>
 
     <div class="faq-item">
+      <div class="faq-q">¿Qué significan las categorías (Run, Change evolutivo, Change estratégico, Auditoría)?</div>
+      <div class="faq-a">Clasifican el <em>tipo</em> de trabajo, independiente del score WSJF — sirven para ver en qué se está yendo la capacidad del equipo, no para priorizar entre sí.
+        <ul style="margin-top:10px;padding-left:20px;line-height:1.8">
+          <li><strong>Run</strong> — mantenimiento operativo, guardia, soporte. Mantener andando lo que ya existe.</li>
+          <li><strong>Change evolutivo</strong> — mejora incremental sobre algo que ya existe (una feature nueva sobre un producto vivo, un ajuste de performance).</li>
+          <li><strong>Change estratégico</strong> — iniciativa transformacional, una capacidad nueva alineada a un OKR grande del área.</li>
+          <li><strong>Auditoría</strong> — cumplimiento regulatorio, hallazgos de auditoría interna o externa, remediación.</li>
+        </ul>
+        <div style="margin-top:10px">Se elige al agregar la iniciativa y alimenta los reportes de "Inversión por categoría" y "Balance por categoría" — la pregunta que responde es <em>"¿cuánta capacidad va a Run vs. a iniciativas nuevas?"</em>, no <em>"qué hago primero"</em>.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
       <div class="faq-q">¿Cómo veo el stack agrupado por OKR/KR en lugar de ordenado por score?</div>
       <div class="faq-a">Arriba de la lista de iniciativas hay un toggle <strong>"Lista / Por OKR/KR"</strong>. En modo agrupado, las iniciativas se agrupan por el campo OKR/KR que cargaste, ordenadas por el score máximo de cada grupo. Cada cabecera de grupo muestra cuántas iniciativas tiene, eng-months totales y score promedio. Las iniciativas sin OKR/KR cargado caen en un grupo aparte al final. Es la vista más útil para responder <em>"¿qué tenemos planeado para este KR?"</em> en una reunión.</div>
     </div>
 
     <div class="faq-item">
+      <div class="faq-q">¿Para qué sirve el campo "KR secundario"?</div>
+      <div class="faq-a">Para cuando una iniciativa beneficia a un KR además del que la dirige. Ejemplo: una iniciativa de fraude tiene el KR principal de fraude, pero también mejora la tasa de aprobación (KR de otro equipo) — ese segundo KR va en "KR secundario". No suma eng-months ni cambia el score: es puramente informativo, para que ese impacto indirecto no quede invisible cuando otro equipo pregunta "¿algo nos ayuda con nuestro KR?". Aparece en el reporte <strong>"🔗 Impactos secundarios por KR"</strong>.</div>
+    </div>
+
+    <div class="faq-item">
       <div class="faq-q">¿Qué hay en el tab "Reportes"?</div>
       <div class="faq-a">
-        Cuatro vistas para analizar el stack desde distintos ángulos. Se calculan en vivo sobre las iniciativas cargadas:
+        Siete vistas para analizar el stack desde distintos ángulos. Se calculan en vivo sobre las iniciativas cargadas:
         <ul style="margin-top:10px;padding-left:20px;line-height:1.8">
           <li><strong>Inversión por OKR/KR</strong> — barras horizontales con eng-months totales por KR. Sirve para detectar divergencia entre <em>"decimos que el KR de fraude es prioridad"</em> y <em>"el 60% de la capacidad va a otra cosa"</em>.</li>
           <li><strong>Capacidad acumulada por ranking</strong> — barra apilada con un segmento por iniciativa, coloreado por veredicto (COMMIT/CONSIDERAR/PARKING/STOP). La línea vertical marca tu capacidad: lo que queda a la derecha no entra al plan.</li>
           <li><strong>Distribución de scores por dimensión</strong> — 4 mini histogramas (I, U, R, E) con cuántas iniciativas tienen cada valor 1-5. Detecta inflación de calibración: si el 80% tiene I=4 o I=5, el equipo está sobreestimando impacto.</li>
+          <li><strong>Inversión por categoría</strong> — gráfico de torta + barras con eng-months por categoría (Run, Change evolutivo, Change estratégico, Auditoría). Responde <em>"¿cuánto de la capacidad del Q es mantenimiento vs. iniciativas nuevas?"</em>.</li>
           <li><strong>Balance por OKR/KR</strong> — tabla con número de iniciativas, eng-months, % de capacidad, score promedio y conteo por veredicto para cada KR. Vista ejecutiva para revisar con stakeholders.</li>
+          <li><strong>🔗 Impactos secundarios por KR</strong> — iniciativas que benefician a un KR distinto del que las dirige (campo "KR secundario"), sin contar eng-months. Muestra el multi-impacto que no aparece en la vista principal.</li>
+          <li><strong>Balance por categoría</strong> — la misma vista ejecutiva que "Balance por OKR/KR" pero agrupada por categoría en vez de por KR.</li>
         </ul>
       </div>
     </div>
@@ -2860,6 +2917,18 @@ function renderScaleUI() {
     cardParking.title = `Score ${t.parking}–${t.commit} — quedan para el próximo Q o si sobra capacidad`;
     labelParking.innerHTML = `PARKING (&lt;${t.commit})`;
   }
+
+  // Guía/FAQ — los umbrales y los ejemplos calculados a mano tienen que
+  // reflejar la escala activa, sino contradicen lo que muestra la app.
+  const setText = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+  setText('faq-t-commit', t.commit.toFixed(1));
+  setText('faq-t-consider', `${t.consider.toFixed(1)}–${t.commit.toFixed(1)}`);
+  setText('faq-t-parking', `${t.parking.toFixed(1)}–${t.consider.toFixed(1)}`);
+  setText('faq-t-stop', t.parking.toFixed(1));
+  setText('faq-ex1-score', calcWSJF(2, 5, 5, 2).toFixed(1));
+  setText('faq-ex2-score', calcWSJF(1, 3, 4, 3).toFixed(1));
+  setText('faq-ex3a-score', calcWSJF(4, 3, 1, 3).toFixed(1));
+  setText('faq-ex3b-score', calcWSJF(1, 2, 5, 2).toFixed(1));
 
   const reportsLabel = document.getElementById('reports-scale-label');
   if (reportsLabel) {
