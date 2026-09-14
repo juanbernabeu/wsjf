@@ -347,6 +347,11 @@ body {
   font-weight: 700;
   letter-spacing: .5px;
 }
+.score-live-scale {
+  font-size: 10px;
+  color: #9A7ACC;
+  margin-bottom: 8px;
+}
 
 /* Add button */
 .btn-add {
@@ -1447,6 +1452,28 @@ body {
 }
 .save-badge.show { opacity: 1; }
 
+.scale-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 20px;
+  padding: 3px 10px;
+  border: 1px solid transparent;
+}
+.scale-badge.scale-v1 {
+  color: var(--warning);
+  background: var(--warning-bg);
+  border-color: var(--warning-b);
+  cursor: pointer;
+}
+.scale-badge.scale-v2 {
+  color: var(--purple);
+  background: var(--lavender);
+  border-color: var(--border);
+}
+
 /* Edit pencil button on card */
 .btn-edit {
   background: none;
@@ -1644,6 +1671,7 @@ body {
         </div>
         <div class="score-live-detail">
           <div class="score-live-formula" id="live-formula">(3 + 3 + 3) ÷ 3 = 3.0</div>
+          <div class="score-live-scale" id="live-scale-label"></div>
           <div class="score-live-verdict" id="live-verdict"></div>
         </div>
       </div>
@@ -1895,6 +1923,7 @@ body {
           <i data-lucide="check-circle" style="width:11px;height:11px;stroke-width:2.5;stroke:currentColor"></i>
           Guardado
         </div>
+        <div class="scale-badge" id="scale-badge"></div>
       </div>
       <div class="stack-actions">
         <input type="file" id="import-csv-input" accept=".csv" style="display:none" onchange="handleImportCSV(event)">
@@ -1920,6 +1949,15 @@ body {
       <div style="display:flex;gap:8px;flex-shrink:0">
         <button onclick="doClear()" style="background:#DC2626;color:white;border:none;border-radius:6px;padding:6px 14px;font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer">Sí, limpiar</button>
         <button onclick="cancelClear()" style="background:white;color:#DC2626;border:1.5px solid #FCA5A5;border-radius:6px;padding:6px 14px;font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer">Cancelar</button>
+      </div>
+    </div>
+
+    <!-- Inline confirm modal — migración a Fibonacci -->
+    <div id="confirm-migrate-modal" style="display:none;background:var(--warning-bg);border:1.5px solid var(--warning-b);border-radius:10px;padding:14px 18px;margin-bottom:16px;align-items:center;justify-content:space-between;gap:12px;animation:slideIn .15s ease">
+      <span style="font-size:12.5px;font-weight:600;color:var(--warning)">¿Migrar este stack a la escala Fibonacci? El orden y algunos veredictos (COMMIT/CONSIDERAR/etc) pueden cambiar. No hay vuelta atrás.</span>
+      <div style="display:flex;gap:8px;flex-shrink:0">
+        <button onclick="doMigrate()" style="background:var(--warning);color:white;border:none;border-radius:6px;padding:6px 14px;font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer">Sí, migrar</button>
+        <button onclick="cancelMigrate()" style="background:white;color:var(--warning);border:1.5px solid var(--warning-b);border-radius:6px;padding:6px 14px;font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer">Cancelar</button>
       </div>
     </div>
 
@@ -2015,13 +2053,13 @@ body {
         <div class="stat-val" id="stat-total" style="color:var(--purple)">0</div>
         <div class="stat-label">Iniciativas totales</div>
       </div>
-      <div class="stat-card" title="Score > 4.0 — entran al plan si hay capacidad">
+      <div class="stat-card" id="stat-card-commit" title="Score > 4.0 — entran al plan si hay capacidad">
         <div class="stat-val" id="stat-commit" style="color:var(--success)">0</div>
-        <div class="stat-label">COMMIT (score &gt;4)</div>
+        <div class="stat-label" id="stat-label-commit">COMMIT (score &gt;4)</div>
       </div>
-      <div class="stat-card" title="Score 1.5–4.0 — quedan para el próximo Q o si sobra capacidad">
+      <div class="stat-card" id="stat-card-parking" title="Score 1.5–4.0 — quedan para el próximo Q o si sobra capacidad">
         <div class="stat-val" id="stat-parking" style="color:var(--info)">0</div>
-        <div class="stat-label">PARKING (&lt;4)</div>
+        <div class="stat-label" id="stat-label-parking">PARKING (&lt;4)</div>
       </div>
       <div class="stat-card">
         <div class="stat-val" id="stat-avg" style="color:var(--orange)">—</div>
@@ -2277,7 +2315,8 @@ body {
 
   <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--orange);font-weight:700;margin-bottom:8px">Análisis del stack rank</div>
   <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:24px;font-weight:800;color:var(--purple);letter-spacing:-.5px;margin-bottom:6px">Reportes y distribución</div>
-  <div style="font-size:13px;color:var(--muted);margin-bottom:28px">Dónde está realmente la inversión vs dónde decís que está. Detectá divergencia entre narrativa y plan.</div>
+  <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Dónde está realmente la inversión vs dónde decís que está. Detectá divergencia entre narrativa y plan.</div>
+  <div id="reports-scale-label" style="font-size:11px;font-weight:600;color:var(--purple);margin-bottom:28px"></div>
 
   <!-- Empty -->
   <div id="reports-empty" class="empty-state" style="display:none">
@@ -2458,6 +2497,12 @@ const CATEGORIES = [
   { id: 'auditoria', label: 'Auditoría', color: '#D97706', bgColor: '#FFFBEB' }
 ];
 
+// ── ESCALA WSJF ──────────────────────────────────────
+// v1 = lineal (I/U/R sin transformar). v2 = Fibonacci (4→5, 5→8).
+// Es una propiedad de TODO el stack — nunca convive v1 y v2 en el mismo stack.
+const FIB = { 1:1, 2:2, 3:3, 4:5, 5:8 };
+let scaleVersion = 2;
+
 // ── STATE ────────────────────────────────────────────
 const state = { I:3, U:3, R:3, E:3, tshirt:'M', category:'change-evolutivo' };
 const stack = [];
@@ -2473,10 +2518,12 @@ function esc(s) {
 // ── LOCALSTORAGE ─────────────────────────────────────
 const LS_KEY = 'wsjf_stack_v1';
 const LS_TEAM = 'wsjf_team_v1';
+const LS_SCALE = 'wsjf_scale_version';
 
 function saveToLS() {
   try {
     localStorage.setItem(LS_KEY, JSON.stringify(stack));
+    localStorage.setItem(LS_SCALE, String(scaleVersion));
     const teamName = document.getElementById('team-name')?.value || '';
     localStorage.setItem(LS_TEAM, teamName);
     // Flash badge
@@ -2488,9 +2535,18 @@ function saveToLS() {
 function loadFromLS() {
   try {
     const saved = localStorage.getItem(LS_KEY);
+    const savedScale = localStorage.getItem(LS_SCALE);
     if (saved) {
+      // Si no hay LS_SCALE guardado, este stack es de antes de que existiera
+      // Fibonacci — se queda en v1 en vez de reinterpretarse solo.
+      scaleVersion = savedScale ? (parseInt(savedScale, 10) || 1) : 1;
       const items = JSON.parse(saved);
-      items.forEach(i => stack.push(i));
+      items.forEach(i => {
+        i.score = calcWSJF(i.I, i.U, i.R, i.E);
+        stack.push(i);
+      });
+    } else {
+      scaleVersion = savedScale ? (parseInt(savedScale, 10) || 2) : 2;
     }
     const team = localStorage.getItem(LS_TEAM);
     if (team) {
@@ -2503,22 +2559,29 @@ function loadFromLS() {
 }
 
 // ── SCORE LOGIC ─────────────────────────────────────
-function calcWSJF(I, U, R, E) {
-  return parseFloat(((I + U + R) / E).toFixed(2));
+// Umbrales v2 = umbrales v1 × 1.6 (el numerador máximo pasa de 15 a 24 con
+// el mapeo Fibonacci: 8+8+8 vs 5+5+5).
+const VERDICT_THRESHOLDS = {
+  1: { commit: 4.0, consider: 2.5, parking: 1.5 },
+  2: { commit: 6.4, consider: 4.0, parking: 2.4 }
+};
+const VERDICT_COLORS = { COMMIT: '#16A34A', CONSIDERAR: '#D97706', PARKING: '#2563EB', STOP: '#DC2626' };
+
+function calcWSJF(I, U, R, E, version = scaleVersion) {
+  const w = v => version === 2 ? FIB[v] : v;
+  return parseFloat(((w(I) + w(U) + w(R)) / E).toFixed(2));
 }
 
-function getVerdict(score) {
-  if (score > 4.0)  return { label:'COMMIT',    cls:'v-commit',   short:'COMMIT' };
-  if (score > 2.5)  return { label:'CONSIDERAR', cls:'v-consider', short:'CONSIDERAR' };
-  if (score > 1.5)  return { label:'PARKING',    cls:'v-parking',  short:'PARKING' };
-  return              { label:'STOP',          cls:'v-stop',     short:'STOP' };
+function getVerdict(score, version = scaleVersion) {
+  const t = VERDICT_THRESHOLDS[version] || VERDICT_THRESHOLDS[2];
+  if (score > t.commit)   return { label:'COMMIT',     cls:'v-commit',   short:'COMMIT' };
+  if (score > t.consider) return { label:'CONSIDERAR', cls:'v-consider', short:'CONSIDERAR' };
+  if (score > t.parking)  return { label:'PARKING',    cls:'v-parking',  short:'PARKING' };
+  return                    { label:'STOP',           cls:'v-stop',     short:'STOP' };
 }
 
-function getScoreColor(score) {
-  if (score > 4.0) return '#16A34A';
-  if (score > 2.5) return '#D97706';
-  if (score > 1.5) return '#2563EB';
-  return '#DC2626';
+function getScoreColor(score, version = scaleVersion) {
+  return VERDICT_COLORS[getVerdict(score, version).label];
 }
 
 function tshirtLabel(e) {
@@ -2531,13 +2594,21 @@ function updateLive() {
   const score = calcWSJF(I, U, R, E);
   const v = getVerdict(score);
   const color = getScoreColor(score);
+  const w = val => scaleVersion === 2 ? FIB[val] : val;
 
   const numEl = document.getElementById('live-score');
   numEl.textContent = score.toFixed(1);
   numEl.style.color = color;
 
   document.getElementById('live-formula').textContent =
-    `(${I} + ${U} + ${R}) ÷ ${E} = ${score.toFixed(2)}`;
+    `(${w(I)} + ${w(U)} + ${w(R)}) ÷ ${E} = ${score.toFixed(2)}`;
+
+  const scaleEl = document.getElementById('live-scale-label');
+  if (scaleEl) {
+    scaleEl.textContent = scaleVersion === 2
+      ? 'Escala Fibonacci — niveles 4 y 5 valen 5 y 8'
+      : 'Escala lineal — niveles 1 a 5';
+  }
 
   const vEl = document.getElementById('live-verdict');
   vEl.textContent = v.label;
@@ -2732,15 +2803,86 @@ function cancelClear() {
 }
 function doClear() {
   stack.length = 0;
+  scaleVersion = 2;
   document.getElementById('confirm-modal').style.display = 'none';
   renderStack();
+  renderScaleUI();
   saveToLS();
+}
+
+// ── ESCALA — TOGGLE / MIGRACIÓN v1 → v2 ──────────────
+// Un solo sentido: v1 es legacy, v2 es el estándar hacia adelante. I/U/R/E
+// no cambian, solo se recalcula score con el mapeo Fibonacci.
+function confirmMigrate() {
+  if (scaleVersion !== 1) return;
+  document.getElementById('confirm-migrate-modal').style.display = 'flex';
+}
+function cancelMigrate() {
+  document.getElementById('confirm-migrate-modal').style.display = 'none';
+}
+function doMigrate() {
+  scaleVersion = 2;
+  stack.forEach(item => { item.score = calcWSJF(item.I, item.U, item.R, item.E); });
+  stack.sort((a, b) => b.score - a.score);
+  document.getElementById('confirm-migrate-modal').style.display = 'none';
+  renderStack();
+  renderScaleUI();
+  if (document.getElementById('view-reports').style.display !== 'none') renderReports();
+  saveToLS();
+}
+
+function renderScaleUI() {
+  const badge = document.getElementById('scale-badge');
+  if (badge) {
+    if (scaleVersion === 2) {
+      badge.textContent = 'Escala: Fibonacci';
+      badge.className = 'scale-badge scale-v2';
+      badge.onclick = null;
+      badge.title = 'Escala Fibonacci activa — niveles 4 y 5 de I/U/R valen 5 y 8';
+    } else {
+      badge.textContent = 'Escala: Lineal (1-5) — migrar a Fibonacci →';
+      badge.className = 'scale-badge scale-v1';
+      badge.onclick = confirmMigrate;
+      badge.title = 'Click para migrar este stack a la escala Fibonacci (no se puede volver atrás)';
+    }
+  }
+
+  const t = VERDICT_THRESHOLDS[scaleVersion];
+  const cardCommit = document.getElementById('stat-card-commit');
+  const labelCommit = document.getElementById('stat-label-commit');
+  const cardParking = document.getElementById('stat-card-parking');
+  const labelParking = document.getElementById('stat-label-parking');
+  if (cardCommit && labelCommit) {
+    cardCommit.title = `Score > ${t.commit} — entran al plan si hay capacidad`;
+    labelCommit.innerHTML = `COMMIT (score &gt;${t.commit})`;
+  }
+  if (cardParking && labelParking) {
+    cardParking.title = `Score ${t.parking}–${t.commit} — quedan para el próximo Q o si sobra capacidad`;
+    labelParking.innerHTML = `PARKING (&lt;${t.commit})`;
+  }
+
+  const reportsLabel = document.getElementById('reports-scale-label');
+  if (reportsLabel) {
+    reportsLabel.textContent = scaleVersion === 2
+      ? 'Escala Fibonacci — niveles 4 y 5 de I/U/R valen 5 y 8 en el cálculo del score.'
+      : 'Escala lineal — niveles 1 a 5 de I/U/R sin transformar.';
+  }
+
+  ['I', 'U', 'R'].forEach(dim => {
+    document.querySelectorAll(`#rub-${dim} .rub-opt`).forEach(el => {
+      const val = parseInt(el.dataset.val, 10);
+      const scoreEl = el.querySelector('.rub-score');
+      if (!scoreEl) return;
+      const weight = scaleVersion === 2 ? FIB[val] : val;
+      scoreEl.textContent = weight === val ? String(val) : `${val}→${weight}`;
+    });
+  });
 }
 
 // ── SHARE BY URL ─────────────────────────────────────
 function buildSharePayload() {
   return {
-    v: 1,
+    v: scaleVersion,
     t: (document.getElementById('team-name')?.value || '').trim(),
     c: {
       d: parseFloat(document.getElementById('cap-devs').value) || 6,
@@ -2759,7 +2901,11 @@ function buildSharePayload() {
 }
 
 function applySharePayload(p) {
-  if (!p || p.v !== 1 || !Array.isArray(p.s)) return false;
+  if (!p || (p.v !== 1 && p.v !== 2) || !Array.isArray(p.s)) return false;
+
+  // El link fija la escala de TODO el stack — se adopta la del payload,
+  // nunca se mezcla con la que estaba activa antes de cargarlo.
+  scaleVersion = p.v;
 
   // Equipo
   if (typeof p.t === 'string') {
@@ -2786,12 +2932,13 @@ function applySharePayload(p) {
       krSecondary: (it.ks || '').toString(),
       category: it.c || 'change-evolutivo',
       I, U, R, E,
-      score: calcWSJF(I, U, R, E),
+      score: calcWSJF(I, U, R, E, p.v),
       em: Math.max(0, parseFloat(it.m) || 0),
       tshirt: tshirtLabel(E)
     });
   });
   stack.sort((a, b) => b.score - a.score);
+  renderScaleUI();
   return true;
 }
 
@@ -2851,7 +2998,7 @@ function loadFromHash() {
     const json = LZString.decompressFromEncodedURIComponent(encoded);
     if (!json) return false;
     const payload = JSON.parse(json);
-    if (!payload || payload.v !== 1) return false;
+    if (!payload || (payload.v !== 1 && payload.v !== 2)) return false;
 
     const incomingCount = Array.isArray(payload.s) ? payload.s.length : 0;
     if (stack.length > 0) {
@@ -2912,8 +3059,21 @@ function handleImportCSV(event) {
     const imported = [];
     let teamFromCSV = '';
 
+    // La columna Escala (si existe) siempre va al final, sin importar qué
+    // combinación de columnas opcionales (categoría/KR secundario) traiga
+    // el archivo — se detecta por header, no por conteo, para no chocar
+    // con los formatos viejos de 12/13/14 columnas.
+    const headerCols = parseCSVLine(lines[0]);
+    const hasScaleColumn = headerCols[headerCols.length - 1]?.trim() === 'Escala';
+    let importedVersion = 1; // CSV sin columna Escala = de antes de Fibonacci
+
     dataLines.forEach((line, idx) => {
-      const cols = parseCSVLine(line);
+      const rawCols = parseCSVLine(line);
+      if (hasScaleColumn) {
+        const scaleLabel = rawCols[rawCols.length - 1]?.trim();
+        importedVersion = scaleLabel === 'Fibonacci' ? 2 : 1;
+      }
+      const cols = hasScaleColumn ? rawCols.slice(0, -1) : rawCols;
       // Retrocompatibilidad:
       // - Formato 1 (viejo): 12 cols (sin categoría ni KR secundario)
       // - Formato 2: 13 cols (con categoría, sin KR secundario)
@@ -2955,7 +3115,7 @@ function handleImportCSV(event) {
       const U = Math.min(5, Math.max(1, parseInt(cols[6 + offset]) || 3));
       const R = Math.min(5, Math.max(1, parseInt(cols[7 + offset]) || 3));
       const E = Math.min(5, Math.max(1, parseInt(cols[8 + offset]) || 3));
-      const score = calcWSJF(I, U, R, E);
+      const score = calcWSJF(I, U, R, E, importedVersion);
 
       imported.push({
         id: Date.now() + idx + Math.floor(Math.random() * 1e6),
@@ -2984,11 +3144,25 @@ function handleImportCSV(event) {
       );
       if (replace) {
         stack.length = 0;
+        scaleVersion = importedVersion;
         msg = `${imported.length} iniciativa(s) importada(s) · stack reemplazado.`;
       } else {
+        // No se pueden mezclar escalas en el mismo stack — bloquear el merge
+        // en vez de reinterpretar en silencio los scores importados.
+        if (importedVersion !== scaleVersion) {
+          const nameOf = v => v === 2 ? 'Fibonacci' : 'Lineal';
+          alert(
+            `Este CSV usa la escala ${nameOf(importedVersion)} y tu stack actual está en ${nameOf(scaleVersion)}.\n\n` +
+            `No se pueden mezclar dos escalas en el mismo stack. Para agregar estas iniciativas, ` +
+            `reemplazá el stack en vez de agregarlo, o migrá tu stack actual a Fibonacci primero.`
+          );
+          event.target.value = '';
+          return;
+        }
         msg = `${imported.length} iniciativa(s) agregada(s) al stack existente.`;
       }
     } else {
+      scaleVersion = importedVersion;
       msg = `${imported.length} iniciativa(s) importada(s) correctamente.`;
     }
 
@@ -3003,6 +3177,7 @@ function handleImportCSV(event) {
     }
 
     renderStack();
+    renderScaleUI();
     saveToLS();
 
     const toast = document.getElementById('import-toast');
@@ -3029,8 +3204,10 @@ function exportCSV() {
 
   const headers = [
     'Equipo','Ranking','Iniciativa','KR principal','KR secundario','Categoria',
-    'WSJF Score','I','U','R','E','Camiseta','Eng-months','Decision'
+    'WSJF Score','I','U','R','E','Camiseta','Eng-months','Decision','Escala'
   ];
+
+  const scaleLabel = scaleVersion === 2 ? 'Fibonacci' : 'Lineal';
 
   const rows = stack.map((item, idx) => {
     const v   = getVerdict(item.score);
@@ -3039,7 +3216,7 @@ function exportCSV() {
     return [
       esc(teamName), idx + 1, esc(item.name), esc(item.kr || ''), esc(item.krSecondary || ''), esc(catLabel),
       item.score.toFixed(2), item.I, item.U, item.R, item.E,
-      item.tshirt || '', item.em || '', v.short,
+      item.tshirt || '', item.em || '', v.short, scaleLabel,
     ].join(',');
   });
 
@@ -3193,9 +3370,9 @@ function renderStack() {
   updateCapBar(totalEm, teamCap);
 
   // Stats
-  const commits = stack.filter(i => i.score > 4.0).length;
-  const parkings = stack.filter(i => i.score > 1.5 && i.score <= 2.5).length;
-  const considers = stack.filter(i => i.score > 2.5 && i.score <= 4.0).length;
+  const commits = stack.filter(i => getVerdict(i.score).label === 'COMMIT').length;
+  const parkings = stack.filter(i => getVerdict(i.score).label === 'PARKING').length;
+  const considers = stack.filter(i => getVerdict(i.score).label === 'CONSIDERAR').length;
   const avg = (stack.reduce((s, i) => s + i.score, 0) / stack.length).toFixed(1);
 
   document.getElementById('stat-total').textContent = stack.length;
@@ -3615,10 +3792,10 @@ function renderReportTable() {
     const avg = items.reduce((s, i) => s + i.score, 0) / items.length;
     const counts = { commit: 0, consider: 0, parking: 0, stop: 0 };
     items.forEach(i => {
-      const s = i.score;
-      if (s > 4.0) counts.commit++;
-      else if (s > 2.5) counts.consider++;
-      else if (s > 1.5) counts.parking++;
+      const label = getVerdict(i.score).label;
+      if (label === 'COMMIT') counts.commit++;
+      else if (label === 'CONSIDERAR') counts.consider++;
+      else if (label === 'PARKING') counts.parking++;
       else counts.stop++;
     });
     return { key: k, items, em, avg, counts };
@@ -3804,10 +3981,10 @@ function renderReportTableCategory() {
   const rows = totals.filter(g => g.items.length > 0).map(g => {
     const counts = { commit: 0, consider: 0, parking: 0, stop: 0 };
     g.items.forEach(i => {
-      const s = i.score;
-      if (s > 4.0) counts.commit++;
-      else if (s > 2.5) counts.consider++;
-      else if (s > 1.5) counts.parking++;
+      const label = getVerdict(i.score).label;
+      if (label === 'COMMIT') counts.commit++;
+      else if (label === 'CONSIDERAR') counts.consider++;
+      else if (label === 'PARKING') counts.parking++;
       else counts.stop++;
     });
     return { cat: g.cat, items: g.items, em: g.totalEm, avg: g.avgScore, counts };
@@ -3868,6 +4045,7 @@ updateRubricActive('E', 3);
 updateTshirtActive(3);
 ['I','U','R','E'].forEach(dim => renderDetail(dim, state[dim]));
 if (stack.length) renderStack();
+renderScaleUI();
 
 document.getElementById('init-name').addEventListener('keydown', e => {
   if (e.key === 'Enter') addInitiative();
@@ -3877,6 +4055,16 @@ document.getElementById('team-name').addEventListener('input', () => {
   const name = document.getElementById('team-name').value.trim();
   document.getElementById('stack-title').textContent = name ? `Stack Rank — ${name}` : 'Stack Rank del equipo';
   saveToLS();
+});
+
+// Cambiar solo el hash (pegar un link nuevo en una pestaña ya abierta, ir
+// atrás/adelante en el browser) no recarga la página — sin este listener
+// el link se ignora en silencio, sin error visible.
+window.addEventListener('hashchange', () => {
+  if (loadFromHash()) {
+    renderStack();
+    if (document.getElementById('view-reports').style.display !== 'none') renderReports();
+  }
 });
 </script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" onload="lucide.createIcons()" onerror="console.warn('Lucide no cargó — íconos SVG no disponibles')"></script>
